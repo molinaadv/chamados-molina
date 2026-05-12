@@ -189,15 +189,16 @@ elif perfil_usuario == "Administrador":
         "Abrir Chamado",
         "Painel Geral",
         "TV Operacional",
+        "Relatórios",
         "Atualizar Chamado",
         "Gerenciar Usuários"
     ]
 
-elif perfil_usuario == "Diretoria":
+elif perfil_usuario == "Gestor":
     opcoes_menu = [
         "Abrir Chamado",
         "Painel Geral",
-        "TV Operacional",
+        "Relatórios",
         "Atualizar Chamado"
     ]
 
@@ -787,6 +788,176 @@ elif menu == "TV Operacional":
                     {row.get("descricao", "")}
                 </div>
                 """, unsafe_allow_html=True)
+
+# =========================
+# RELATÓRIOS
+# =========================
+
+elif menu == "Relatórios":
+
+    st.title("📄 Relatórios de Chamados")
+
+    df = carregar_chamados()
+    df = aplicar_permissao_chamados(df, usuario)
+
+    if df.empty:
+        st.info("Nenhum chamado encontrado.")
+    else:
+        df["criado_em"] = pd.to_datetime(
+            df["criado_em"],
+            errors="coerce",
+            utc=True
+        )
+
+        df["sla"] = df.apply(calcular_sla, axis=1)
+        df["data"] = df["criado_em"].dt.date
+
+        st.subheader("Filtros do relatório")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            data_inicio = st.date_input(
+                "Data inicial",
+                value=df["data"].min()
+            )
+
+        with col2:
+            data_fim = st.date_input(
+                "Data final",
+                value=df["data"].max()
+            )
+
+        with col3:
+            status_filtro = st.multiselect(
+                "Status",
+                sorted(df["status"].dropna().unique()),
+                default=list(df["status"].dropna().unique())
+            )
+
+        col4, col5, col6 = st.columns(3)
+
+        with col4:
+            setor_filtro = st.multiselect(
+                "Setor",
+                sorted(df["setor"].dropna().unique()),
+                default=list(df["setor"].dropna().unique())
+            )
+
+        with col5:
+            unidade_filtro = st.multiselect(
+                "Unidade",
+                sorted(df["unidade"].dropna().unique()),
+                default=list(df["unidade"].dropna().unique())
+            )
+
+        with col6:
+            prioridade_filtro = st.multiselect(
+                "Prioridade",
+                sorted(df["prioridade"].dropna().unique()),
+                default=list(df["prioridade"].dropna().unique())
+            )
+
+        df_relatorio = df[
+            (df["data"] >= data_inicio) &
+            (df["data"] <= data_fim) &
+            (df["status"].isin(status_filtro)) &
+            (df["setor"].isin(setor_filtro)) &
+            (df["unidade"].isin(unidade_filtro)) &
+            (df["prioridade"].isin(prioridade_filtro))
+        ]
+
+        st.divider()
+
+        total = len(df_relatorio)
+        abertos = len(df_relatorio[df_relatorio["status"] == "Aberto"])
+        andamento = len(df_relatorio[df_relatorio["status"] == "Em andamento"])
+        finalizados = len(df_relatorio[df_relatorio["status"] == "Finalizado"])
+        atrasados = len(df_relatorio[df_relatorio["sla"] == "Atrasado"])
+        urgentes = len(df_relatorio[df_relatorio["prioridade"] == "Urgente"])
+
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
+
+        c1.metric("Total", total)
+        c2.metric("Abertos", abertos)
+        c3.metric("Andamento", andamento)
+        c4.metric("Finalizados", finalizados)
+        c5.metric("Atrasados", atrasados)
+        c6.metric("Urgentes", urgentes)
+
+        st.divider()
+
+        st.subheader("Resumo por setor")
+
+        if not df_relatorio.empty:
+            resumo_setor = (
+                df_relatorio.groupby("setor")
+                .size()
+                .reset_index(name="quantidade")
+                .sort_values("quantidade", ascending=False)
+            )
+
+            st.dataframe(
+                resumo_setor,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            st.subheader("Resumo por unidade")
+
+            resumo_unidade = (
+                df_relatorio.groupby("unidade")
+                .size()
+                .reset_index(name="quantidade")
+                .sort_values("quantidade", ascending=False)
+            )
+
+            st.dataframe(
+                resumo_unidade,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            st.subheader("Chamados do relatório")
+
+            colunas_relatorio = [
+                "protocolo",
+                "status",
+                "prioridade",
+                "sla",
+                "unidade",
+                "setor",
+                "categoria",
+                "solicitante",
+                "responsavel",
+                "descricao",
+                "criado_em",
+                "finalizado_em"
+            ]
+
+            colunas_existentes = [
+                c for c in colunas_relatorio if c in df_relatorio.columns
+            ]
+
+            st.dataframe(
+                df_relatorio[colunas_existentes],
+                use_container_width=True,
+                hide_index=True
+            )
+
+            csv = df_relatorio[colunas_existentes].to_csv(
+                index=False
+            ).encode("utf-8-sig")
+
+            st.download_button(
+                label="⬇️ Baixar relatório em Excel/CSV",
+                data=csv,
+                file_name="relatorio_chamados.csv",
+                mime="text/csv"
+            )
+
+        else:
+            st.warning("Nenhum chamado encontrado com os filtros selecionados.")
 
 # =========================
 # ATUALIZAR CHAMADO
