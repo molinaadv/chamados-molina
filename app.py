@@ -73,7 +73,7 @@ def enviar_google_chat(mensagem):
 
 
 def carregar_chamados():
-    response = supabase.table("chamados_legalone") \
+    response = supabase.table("chamados") \
         .select("*") \
         .order("criado_em", desc=True) \
         .execute()
@@ -306,14 +306,14 @@ if menu == "Abrir Chamado":
                     "status": "Aberto"
                 }
 
-                result = supabase.table("chamados_legalone") \
+                result = supabase.table("chamados") \
                     .insert(dados) \
                     .execute()
 
                 chamado_id = result.data[0]["id"]
                 protocolo = criar_protocolo(chamado_id)
 
-                supabase.table("chamados_legalone") \
+                supabase.table("chamados") \
                     .update({"protocolo": protocolo}) \
                     .eq("id", chamado_id) \
                     .execute()
@@ -1016,7 +1016,7 @@ elif menu == "Atualizar Chamado":
             if novo_status == "Finalizado":
                 dados_update["finalizado_em"] = datetime.now(timezone.utc).isoformat()
 
-            supabase.table("chamados_legalone") \
+            supabase.table("chamados") \
                 .update(dados_update) \
                 .eq("id", int(chamado["id"])) \
                 .execute()
