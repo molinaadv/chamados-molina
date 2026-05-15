@@ -378,14 +378,14 @@ elif menu == "Painel Geral":
             df[df["sla"] == "Atrasado"]
         )
 
-        col2, col3, col4, col5, col6, col1 = st.columns(6)
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
 
-        col2.metric("Abertos", abertos)
-        col3.metric("Andamento", andamento)
-        col4.metric("Finalizados", finalizados)
-        col5.metric("Urgentes", urgentes)
-        col6.metric("Atrasados", atrasados)
-        col1.metric("Total", total)
+        col1.metric("Abertos", abertos)
+        col2.metric("Andamento", andamento)
+        col3.metric("Urgentes", urgentes)
+        col4.metric("Atrasados", atrasados)
+        col5.metric("Finalizados", finalizados)
+        col6.metric("Total", total)
 
         st.divider()
 
