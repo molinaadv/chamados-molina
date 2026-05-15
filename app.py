@@ -594,200 +594,53 @@ elif menu == "TV Operacional":
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
 
-        with col1:
-            st.markdown(f"""
-            <div class="tv-card card-total">
-                <div class="tv-number">{total}</div>
-                <div class="tv-label">Total</div>
-            </div>
-            """, unsafe_allow_html=True)
+with col1:
+    st.markdown(f"""
+    <div class="tv-card card-abertos">
+        <div class="tv-number">{abertos}</div>
+        <div class="tv-label">Abertos</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col2:
-            st.markdown(f"""
-            <div class="tv-card card-abertos">
-                <div class="tv-number">{abertos}</div>
-                <div class="tv-label">Abertos</div>
-            </div>
-            """, unsafe_allow_html=True)
+with col2:
+    st.markdown(f"""
+    <div class="tv-card card-andamento">
+        <div class="tv-number">{andamento}</div>
+        <div class="tv-label">Em andamento</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col3:
-            st.markdown(f"""
-            <div class="tv-card card-andamento">
-                <div class="tv-number">{andamento}</div>
-                <div class="tv-label">Em andamento</div>
-            </div>
-            """, unsafe_allow_html=True)
+with col3:
+    st.markdown(f"""
+    <div class="tv-card card-urgentes">
+        <div class="tv-number">{urgentes}</div>
+        <div class="tv-label">Urgentes</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col4:
-            st.markdown(f"""
-            <div class="tv-card card-urgentes">
-                <div class="tv-number">{urgentes}</div>
-                <div class="tv-label">Urgentes</div>
-            </div>
-            """, unsafe_allow_html=True)
+with col4:
+    st.markdown(f"""
+    <div class="tv-card card-atrasados">
+        <div class="tv-number">{atrasados}</div>
+        <div class="tv-label">Atrasados</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col5:
-            st.markdown(f"""
-            <div class="tv-card card-atrasados">
-                <div class="tv-number">{atrasados}</div>
-                <div class="tv-label">Atrasados</div>
-            </div>
-            """, unsafe_allow_html=True)
+with col5:
+    st.markdown(f"""
+    <div class="tv-card card-finalizados">
+        <div class="tv-number">{finalizados}</div>
+        <div class="tv-label">Finalizados</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col6:
-            st.markdown(f"""
-            <div class="tv-card card-finalizados">
-                <div class="tv-number">{finalizados}</div>
-                <div class="tv-label">Finalizados</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        colg1, colg2 = st.columns(2)
-
-        with colg1:
-
-            st.markdown(
-                '<div class="section-title">🏢 Ranking por Setor</div>',
-                unsafe_allow_html=True
-            )
-
-            ranking_setor = (
-                df.groupby("setor")
-                .size()
-                .reset_index(name="quantidade")
-                .sort_values("quantidade", ascending=False)
-                .head(8)
-            )
-
-            fig_setor = px.bar(
-                ranking_setor,
-                x="setor",
-                y="quantidade",
-                text="quantidade"
-            )
-
-            fig_setor.update_layout(
-                paper_bgcolor="#0f172a",
-                plot_bgcolor="#0f172a",
-                font=dict(color="white", size=24),
-                title_font=dict(size=32),
-                xaxis=dict(
-                    title_font=dict(size=26),
-                    tickfont=dict(size=24)
-                ),
-                yaxis=dict(
-                    title_font=dict(size=26),
-                    tickfont=dict(size=24)
-                ),
-                height=430
-            )
-
-            fig_setor.update_traces(
-                textfont_size=30,
-                textfont_color="white",
-                textposition="outside"
-            )
-
-            st.plotly_chart(
-                fig_setor,
-                use_container_width=True
-            )
-
-        with colg2:
-
-            st.markdown(
-                '<div class="section-title">📍 Ranking por Unidade</div>',
-                unsafe_allow_html=True
-            )
-
-            ranking_unidade = (
-                df.groupby("unidade")
-                .size()
-                .reset_index(name="quantidade")
-                .sort_values("quantidade", ascending=False)
-                .head(8)
-            )
-
-            fig_unidade = px.bar(
-                ranking_unidade,
-                x="unidade",
-                y="quantidade",
-                text="quantidade"
-            )
-
-            fig_unidade.update_layout(
-                paper_bgcolor="#0f172a",
-                plot_bgcolor="#0f172a",
-                font=dict(color="white", size=24),
-                title_font=dict(size=32),
-                xaxis=dict(
-                    title_font=dict(size=26),
-                    tickfont=dict(size=24)
-                ),
-                yaxis=dict(
-                    title_font=dict(size=26),
-                    tickfont=dict(size=24)
-                ),
-                height=430
-            )
-
-            fig_unidade.update_traces(
-                textfont_size=30,
-                textfont_color="white",
-                textposition="outside"
-            )
-
-            st.plotly_chart(
-                fig_unidade,
-                use_container_width=True
-            )
-
-        colc1, colc2 = st.columns(2)
-
-        with colc1:
-            st.markdown(
-                '<div class="section-title">🚨 Chamados Críticos</div>',
-                unsafe_allow_html=True
-            )
-
-            df_criticos = df[
-                (df["sla"] == "Atrasado") |
-                (df["prioridade"] == "Urgente")
-            ].head(6)
-
-            if df_criticos.empty:
-                st.markdown("""
-                <div class="ok-card">
-                    Nenhum chamado crítico no momento.
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                for _, row in df_criticos.iterrows():
-                    st.markdown(f"""
-                    <div class="alert-card">
-                        <b>{row.get("protocolo", "")}</b> • {row.get("prioridade", "")} • {row.get("sla", "")}<br>
-                        <b>Setor:</b> {row.get("setor", "")} |
-                        <b>Unidade:</b> {row.get("unidade", "")}<br>
-                        <b>Descrição:</b> {row.get("descricao", "")}
-                    </div>
-                    """, unsafe_allow_html=True)
-
-        with colc2:
-            st.markdown(
-                '<div class="section-title">🕒 Últimos Chamados</div>',
-                unsafe_allow_html=True
-            )
-
-            ultimos = df.head(6)
-
-            for _, row in ultimos.iterrows():
-                st.markdown(f"""
-                <div class="last-card">
-                    <b>{row.get("protocolo", "")}</b> • {row.get("status", "")} • {row.get("prioridade", "")}<br>
-                    <b>{row.get("setor", "")}</b> - {row.get("unidade", "")}<br>
-                    {row.get("descricao", "")}
-                </div>
-                """, unsafe_allow_html=True)
+with col6:
+    st.markdown(f"""
+    <div class="tv-card card-total">
+        <div class="tv-number">{total}</div>
+        <div class="tv-label">Total</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # =========================
 # RELATÓRIOS
