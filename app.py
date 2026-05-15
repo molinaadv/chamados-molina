@@ -1016,7 +1016,7 @@ elif menu == "Atualizar Chamado":
             if novo_status == "Finalizado":
                 dados_update["finalizado_em"] = datetime.now(timezone.utc).isoformat()
 
-            supabase.table("chamados") \
+            supabase.table("chamados_legalone") \
                 .update(dados_update) \
                 .eq("id", int(chamado["id"])) \
                 .execute()
