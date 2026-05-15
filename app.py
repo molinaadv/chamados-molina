@@ -131,7 +131,7 @@ def calcular_sla(row):
     return "No prazo"
 
 def criar_protocolo(chamado_id):
-    return f"CH-{chamado_id:05d}"
+    return f"LO-{chamado_id:05d}"
 
 
 # =========================
