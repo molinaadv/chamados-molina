@@ -585,12 +585,12 @@ elif menu == "TV Operacional":
 
         df["sla"] = df.apply(calcular_sla, axis=1)
 
-        total = len(df)
         abertos = len(df[df["status"] == "Aberto"])
         andamento = len(df[df["status"] == "Em andamento"])
         finalizados = len(df[df["status"] == "Finalizado"])
         urgentes = len(df[df["prioridade"] == "Urgente"])
         atrasados = len(df[df["sla"] == "Atrasado"])
+        total = len(df)
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
 
