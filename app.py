@@ -965,6 +965,8 @@ elif menu == "Atualizar Chamado":
 
     df = carregar_chamados()
     df = aplicar_permissao_chamados(df, usuario)
+    
+    df = df[~df["status"].isin(["Finalizado", "Cancelado"])]
 
     if df.empty:
         st.info("Nenhum chamado encontrado.")
