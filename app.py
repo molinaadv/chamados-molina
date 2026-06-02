@@ -6,6 +6,9 @@ import plotly.express as px
 from datetime import datetime, timezone, timedelta
 import bcrypt
 import requests
+import json
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request as GoogleAuthRequest
 
 st.set_page_config(
     page_title="Painel de Chamados - Molina",
@@ -71,6 +74,79 @@ def enviar_google_chat(mensagem):
     except Exception as e:
         print(f"Erro Google Chat: {e}")
 
+
+
+
+def obter_credenciais_google_chat():
+    try:
+        raw = st.secrets.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+
+        if not raw:
+            return None
+
+        if isinstance(raw, dict):
+            info = dict(raw)
+        else:
+            info = json.loads(raw)
+
+        credentials = service_account.Credentials.from_service_account_info(
+            info,
+            scopes=["https://www.googleapis.com/auth/chat.bot"]
+        )
+
+        credentials.refresh(GoogleAuthRequest())
+        return credentials
+
+    except Exception as e:
+        print(f"Erro ao obter credenciais Google Chat API: {e}")
+        return None
+
+
+def enviar_mensagem_privada_chamado(space_name, thread_name, mensagem):
+    if not space_name:
+        return False
+
+    credentials = obter_credenciais_google_chat()
+
+    if not credentials:
+        return False
+
+    try:
+        url = f"https://chat.googleapis.com/v1/{space_name}/messages"
+
+        payload = {
+            "text": mensagem
+        }
+
+        if thread_name:
+            payload["thread"] = {
+                "name": thread_name
+            }
+            url += "?messageReplyOption=REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD"
+
+        headers = {
+            "Authorization": f"Bearer {credentials.token}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=10
+        )
+
+        if response.status_code >= 300:
+            print("Erro ao enviar mensagem privada:")
+            print(response.status_code)
+            print(response.text)
+            return False
+
+        return True
+
+    except Exception as e:
+        print(f"Erro ao enviar mensagem privada Google Chat: {e}")
+        return False
 
 def carregar_chamados():
     response = supabase.table("chamados") \
@@ -1033,6 +1109,31 @@ elif menu == "Atualizar Chamado":
                 .execute()
 
             st.success("Chamado atualizado.")
+
+            if novo_status == "Finalizado":
+                mensagem_conclusao = (
+                    f"✅ *Seu chamado foi concluído*\n\n"
+                    f"Protocolo: {chamado.get('protocolo', '')}\n"
+                    f"Unidade: {chamado.get('unidade', '')}\n"
+                    f"Setor: {chamado.get('setor', '')}\n"
+                    f"Responsável: {responsavel or usuario['nome']}\n\n"
+                    f"Descrição:\n{chamado.get('descricao', '')}\n\n"
+                    f"Observação:\n{observacoes or 'Chamado finalizado.'}"
+                )
+
+                enviado_privado = enviar_mensagem_privada_chamado(
+                    chamado.get("space_name", ""),
+                    chamado.get("thread_name", ""),
+                    mensagem_conclusao
+                )
+
+                if enviado_privado:
+                    st.info("O solicitante recebeu a mensagem de conclusão no Google Chat.")
+                else:
+                    st.warning(
+                        "Chamado finalizado, mas não foi possível enviar mensagem privada ao solicitante. "
+                        "Verifique as credenciais da Google Chat API."
+                    )
 
             enviar_google_chat(
                 f"✅ *Chamado atualizado*\n\n"
