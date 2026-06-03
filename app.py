@@ -1892,7 +1892,7 @@ elif menu == "TV Operacional":
         <div class="tv-header">
             <div>
                 <div class="tv-live">● AO VIVO</div>
-                <div class="tv-title">TV OPERACIONAL - V360 CHAMADOS</div>
+                <div class="tv-title">CENTRAL DE CHAMADO TI</div>
             </div>
             <div style="font-size:22px;font-weight:900;">{agora_tela}</div>
         </div>
