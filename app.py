@@ -1,3 +1,4 @@
+
 from streamlit_autorefresh import st_autorefresh
 import streamlit as st
 import pandas as pd
@@ -20,6 +21,7 @@ SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 # =========================
 # FUNÇÕES
@@ -75,19 +77,23 @@ def enviar_google_chat(mensagem):
         print(f"Erro Google Chat: {e}")
 
 
-
-
 def obter_credenciais_google_chat():
     try:
         raw = st.secrets.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
         if not raw:
+            print("GOOGLE_SERVICE_ACCOUNT_JSON não encontrado nos Secrets.")
             return None
 
         if isinstance(raw, dict):
             info = dict(raw)
         else:
-            info = json.loads(raw)
+            raw_texto = str(raw).strip()
+
+            if raw_texto.startswith('"') and raw_texto.endswith('"'):
+                raw_texto = raw_texto[1:-1]
+
+            info = json.loads(raw_texto)
 
         credentials = service_account.Credentials.from_service_account_info(
             info,
@@ -104,12 +110,12 @@ def obter_credenciais_google_chat():
 
 def enviar_mensagem_privada_chamado(space_name, thread_name, mensagem):
     if not space_name:
-        return False
+        return False, "space_name vazio. O chamado não possui origem do Google Chat."
 
     credentials = obter_credenciais_google_chat()
 
     if not credentials:
-        return False
+        return False, "Não foi possível carregar as credenciais GOOGLE_SERVICE_ACCOUNT_JSON."
 
     try:
         url = f"https://chat.googleapis.com/v1/{space_name}/messages"
@@ -133,20 +139,22 @@ def enviar_mensagem_privada_chamado(space_name, thread_name, mensagem):
             url,
             headers=headers,
             json=payload,
-            timeout=10
+            timeout=15
         )
 
         if response.status_code >= 300:
+            detalhe = f"{response.status_code} - {response.text}"
             print("Erro ao enviar mensagem privada:")
-            print(response.status_code)
-            print(response.text)
-            return False
+            print(detalhe)
+            return False, detalhe
 
-        return True
+        return True, "Mensagem enviada com sucesso."
 
     except Exception as e:
-        print(f"Erro ao enviar mensagem privada Google Chat: {e}")
-        return False
+        detalhe = f"Erro ao enviar mensagem privada Google Chat: {e}"
+        print(detalhe)
+        return False, detalhe
+
 
 def carregar_chamados():
     response = supabase.table("chamados") \
@@ -158,7 +166,6 @@ def carregar_chamados():
 
 
 def aplicar_permissao_chamados(df, usuario):
-
     perfil = usuario.get("perfil")
     email = usuario.get("email")
     setor = usuario.get("setor")
@@ -176,6 +183,7 @@ def aplicar_permissao_chamados(df, usuario):
         return df[df["email_solicitante"] == email]
 
     return df.iloc[0:0]
+
 
 def calcular_sla(row):
     prioridade = row.get("prioridade", "Média")
@@ -206,8 +214,9 @@ def calcular_sla(row):
 
     return "No prazo"
 
+
 def criar_protocolo(chamado_id):
-    return f"LO-{chamado_id:05d}"
+    return f"CH-{chamado_id:05d}"
 
 
 # =========================
@@ -241,6 +250,7 @@ if not st.session_state.logado:
     st.stop()
 
 usuario = st.session_state.usuario
+
 
 # =========================
 # SIDEBAR
@@ -291,7 +301,6 @@ else:
     ]
 
 query_params = st.query_params
-
 modo_tv = query_params.get("tv", "0") == "1"
 
 if modo_tv and perfil_usuario in ["Administrador", "Diretoria", "TV"]:
@@ -310,6 +319,7 @@ if modo_tv:
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 # =========================
 # ABRIR CHAMADO
@@ -379,7 +389,8 @@ if menu == "Abrir Chamado":
                     "categoria": categoria,
                     "prioridade": prioridade,
                     "descricao": descricao,
-                    "status": "Aberto"
+                    "status": "Aberto",
+                    "criado_em": datetime.now(timezone.utc).isoformat()
                 }
 
                 result = supabase.table("chamados") \
@@ -406,23 +417,21 @@ if menu == "Abrir Chamado":
                     f"Descrição: {descricao}"
                 )
 
+
 # =========================
 # PAINEL GERAL
 # =========================
 
 elif menu == "Painel Geral":
-
     st.title("📊 Painel Geral")
 
     df = carregar_chamados()
-
     df = aplicar_permissao_chamados(df, usuario)
 
     if df.empty:
         st.info("Nenhum chamado encontrado.")
 
     else:
-
         df["criado_em"] = pd.to_datetime(
             df["criado_em"],
             errors="coerce",
@@ -432,26 +441,11 @@ elif menu == "Painel Geral":
         df["sla"] = df.apply(calcular_sla, axis=1)
 
         total = len(df)
-
-        abertos = len(
-            df[df["status"] == "Aberto"]
-        )
-
-        andamento = len(
-            df[df["status"] == "Em andamento"]
-        )
-
-        finalizados = len(
-            df[df["status"] == "Finalizado"]
-        )
-
-        urgentes = len(
-            df[df["prioridade"] == "Urgente"]
-        )
-
-        atrasados = len(
-            df[df["sla"] == "Atrasado"]
-        )
+        abertos = len(df[df["status"] == "Aberto"])
+        andamento = len(df[df["status"] == "Em andamento"])
+        finalizados = len(df[df["status"] == "Finalizado"])
+        urgentes = len(df[df["prioridade"] == "Urgente"])
+        atrasados = len(df[df["sla"] == "Atrasado"])
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
 
@@ -467,7 +461,6 @@ elif menu == "Painel Geral":
         colg1, colg2 = st.columns(2)
 
         with colg1:
-
             fig_status = px.pie(
                 df,
                 names="status",
@@ -480,7 +473,6 @@ elif menu == "Painel Geral":
             )
 
         with colg2:
-
             fig_prioridade = px.bar(
                 df.groupby("prioridade")
                 .size()
@@ -522,12 +514,12 @@ elif menu == "Painel Geral":
             hide_index=True
         )
 
+
 # =========================
 # TV OPERACIONAL
 # =========================
 
 elif menu == "TV Operacional":
-
     st_autorefresh(interval=30000, key="tv_refresh")
 
     st.markdown("""
@@ -862,12 +854,12 @@ elif menu == "TV Operacional":
                 </div>
                 """, unsafe_allow_html=True)
 
+
 # =========================
 # RELATÓRIOS
 # =========================
 
 elif menu == "Relatórios":
-
     st.title("📄 Relatórios de Chamados")
 
     df = carregar_chamados()
@@ -1032,6 +1024,7 @@ elif menu == "Relatórios":
         else:
             st.warning("Nenhum chamado encontrado com os filtros selecionados.")
 
+
 # =========================
 # ATUALIZAR CHAMADO
 # =========================
@@ -1041,7 +1034,7 @@ elif menu == "Atualizar Chamado":
 
     df = carregar_chamados()
     df = aplicar_permissao_chamados(df, usuario)
-    
+
     df = df[~df["status"].isin(["Finalizado", "Cancelado"])]
 
     if df.empty:
@@ -1075,7 +1068,7 @@ elif menu == "Atualizar Chamado":
 
         responsavel = st.text_input(
             "Responsável",
-            value=chamado.get("responsavel") or ""
+            value=chamado.get("responsavel") or usuario["nome"]
         )
 
         observacoes = st.text_area(
@@ -1121,19 +1114,26 @@ elif menu == "Atualizar Chamado":
                     f"Observação:\n{observacoes or 'Chamado finalizado.'}"
                 )
 
-                enviado_privado = enviar_mensagem_privada_chamado(
-                    chamado.get("space_name", ""),
-                    chamado.get("thread_name", ""),
+                space_name = chamado.get("space_name", "")
+                thread_name = chamado.get("thread_name", "")
+
+                st.write("Tentando enviar conclusão no Google Chat...")
+                st.write("SPACE:", space_name)
+                st.write("THREAD:", thread_name)
+
+                enviado_privado, detalhe_envio = enviar_mensagem_privada_chamado(
+                    space_name,
+                    thread_name,
                     mensagem_conclusao
                 )
 
                 if enviado_privado:
-                    st.info("O solicitante recebeu a mensagem de conclusão no Google Chat.")
+                    st.success("O solicitante recebeu a mensagem de conclusão no Google Chat.")
                 else:
-                    st.warning(
-                        "Chamado finalizado, mas não foi possível enviar mensagem privada ao solicitante. "
-                        "Verifique as credenciais da Google Chat API."
+                    st.error(
+                        "Chamado finalizado, mas não foi possível enviar mensagem privada ao solicitante."
                     )
+                    st.code(detalhe_envio)
 
             enviar_google_chat(
                 f"✅ *Chamado atualizado*\n\n"
@@ -1142,6 +1142,7 @@ elif menu == "Atualizar Chamado":
                 f"Responsável: {responsavel}\n"
                 f"Observação: {observacoes}"
             )
+
 
 # =========================
 # GERENCIAR USUÁRIOS
