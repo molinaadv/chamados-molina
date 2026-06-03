@@ -556,6 +556,33 @@ div[data-testid="stMetric"] {
     background:rgba(255,255,255,.92) !important;
 }
 
+
+.dark-tv-box .stButton > button {
+    background:rgba(255,255,255,.10) !important;
+    color:white !important;
+    border:1px solid rgba(255,255,255,.18) !important;
+    border-radius:12px !important;
+    font-weight:950 !important;
+    padding:10px 8px !important;
+}
+.dark-tv-box .stButton > button:hover {
+    background:#2563eb !important;
+    color:white !important;
+    border-color:#2563eb !important;
+}
+.dark-tv-box .stButton > button * {
+    color:white !important;
+}
+.filtro-ativo {
+    background:rgba(37,99,235,.22);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    padding:10px 14px;
+    margin:10px 0 12px 0;
+    font-weight:900;
+    color:white !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -790,6 +817,33 @@ if not st.session_state.logado:
 }
 [data-testid="stHeader"] {
     background:rgba(255,255,255,.92) !important;
+}
+
+
+.dark-tv-box .stButton > button {
+    background:rgba(255,255,255,.10) !important;
+    color:white !important;
+    border:1px solid rgba(255,255,255,.18) !important;
+    border-radius:12px !important;
+    font-weight:950 !important;
+    padding:10px 8px !important;
+}
+.dark-tv-box .stButton > button:hover {
+    background:#2563eb !important;
+    color:white !important;
+    border-color:#2563eb !important;
+}
+.dark-tv-box .stButton > button * {
+    color:white !important;
+}
+.filtro-ativo {
+    background:rgba(37,99,235,.22);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    padding:10px 14px;
+    margin:10px 0 12px 0;
+    font-weight:900;
+    color:white !important;
 }
 
 </style>
@@ -1101,6 +1155,33 @@ if modo_tv:
     background:rgba(255,255,255,.92) !important;
 }
 
+
+.dark-tv-box .stButton > button {
+    background:rgba(255,255,255,.10) !important;
+    color:white !important;
+    border:1px solid rgba(255,255,255,.18) !important;
+    border-radius:12px !important;
+    font-weight:950 !important;
+    padding:10px 8px !important;
+}
+.dark-tv-box .stButton > button:hover {
+    background:#2563eb !important;
+    color:white !important;
+    border-color:#2563eb !important;
+}
+.dark-tv-box .stButton > button * {
+    color:white !important;
+}
+.filtro-ativo {
+    background:rgba(37,99,235,.22);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    padding:10px 14px;
+    margin:10px 0 12px 0;
+    font-weight:900;
+    color:white !important;
+}
+
 </style>
     """, unsafe_allow_html=True)
 
@@ -1225,6 +1306,20 @@ elif menu == "Painel Geral":
         urgentes = len(df[df["prioridade"] == "Urgente"])
         atrasados = len(df[df["sla"] == "Atrasado"])
 
+        # Finalizados do mês vigente
+        agora_mes = datetime.now(timezone.utc)
+        if "finalizado_em" in df.columns:
+            df["finalizado_em"] = pd.to_datetime(df["finalizado_em"], errors="coerce", utc=True)
+            finalizados_mes = len(
+                df[
+                    (df["status"] == "Finalizado") &
+                    (df["finalizado_em"].dt.month == agora_mes.month) &
+                    (df["finalizado_em"].dt.year == agora_mes.year)
+                ]
+            )
+        else:
+            finalizados_mes = finalizados
+
         esquerda, direita = st.columns([2.35, 1.15], gap="large")
 
         with esquerda:
@@ -1253,11 +1348,11 @@ elif menu == "Painel Geral":
             k1, k2, k3, k4, k5 = st.columns(5)
 
             kpis = [
-                (k1, "📋", "Total de Chamados", total, "+ hoje", "kpi-blue"),
-                (k2, "🟠", "Abertos", abertos, "- hoje", "kpi-orange"),
-                (k3, "🔍", "Em Andamento", andamento, "+ hoje", "kpi-purple"),
-                (k4, "✅", "Finalizados", finalizados, "+ mês", "kpi-green"),
-                (k5, "⏱️", "Atrasados (SLA)", atrasados, "+ SLA", "kpi-red"),
+                (k1, "🟠", "Abertos", abertos, "- hoje", "kpi-orange"),
+                (k2, "🔍", "Em Andamento", andamento, "+ hoje", "kpi-purple"),
+                (k3, "⏱️", "Atrasados (SLA)", atrasados, "+ SLA", "kpi-red"),
+                (k4, "✅", "Finalizados do mês", finalizados_mes, "+ mês", "kpi-green"),
+                (k5, "📋", "Total de Chamados", total, "+ geral", "kpi-blue"),
             ]
 
             for col, icon, label, num, foot, classe in kpis:
@@ -1344,12 +1439,48 @@ elif menu == "Painel Geral":
             with tv_top2:
                 st.markdown(f'<div class="dark-tv-time">{datetime.now().strftime("%d/%m/%Y %H:%M")}</div>', unsafe_allow_html=True)
 
+            if "filtro_tv_painel" not in st.session_state:
+                st.session_state.filtro_tv_painel = "Todos"
+
             tabs1, tabs2, tabs3, tabs4, tabs5 = st.columns(5)
-            tabs1.markdown(f'<div class="tv-tab active">Todos&nbsp;&nbsp;{total}</div>', unsafe_allow_html=True)
-            tabs2.markdown(f'<div class="tv-tab">Abertos&nbsp;&nbsp;{abertos}</div>', unsafe_allow_html=True)
-            tabs3.markdown(f'<div class="tv-tab">Em andamento&nbsp;&nbsp;{andamento}</div>', unsafe_allow_html=True)
-            tabs4.markdown(f'<div class="tv-tab">Atrasados&nbsp;&nbsp;{atrasados}</div>', unsafe_allow_html=True)
-            tabs5.markdown(f'<div class="tv-tab">Urgentes&nbsp;&nbsp;{urgentes}</div>', unsafe_allow_html=True)
+
+            with tabs1:
+                if st.button(f"Todos  {total}", use_container_width=True, key="btn_tv_todos"):
+                    st.session_state.filtro_tv_painel = "Todos"
+
+            with tabs2:
+                if st.button(f"Abertos  {abertos}", use_container_width=True, key="btn_tv_abertos"):
+                    st.session_state.filtro_tv_painel = "Abertos"
+
+            with tabs3:
+                if st.button(f"Em andamento  {andamento}", use_container_width=True, key="btn_tv_andamento"):
+                    st.session_state.filtro_tv_painel = "Em andamento"
+
+            with tabs4:
+                if st.button(f"Atrasados  {atrasados}", use_container_width=True, key="btn_tv_atrasados"):
+                    st.session_state.filtro_tv_painel = "Atrasados"
+
+            with tabs5:
+                if st.button(f"Urgentes  {urgentes}", use_container_width=True, key="btn_tv_urgentes"):
+                    st.session_state.filtro_tv_painel = "Urgentes"
+
+            filtro_tv = st.session_state.filtro_tv_painel
+
+            if filtro_tv == "Abertos":
+                df_tv_painel = df[df["status"] == "Aberto"].copy()
+            elif filtro_tv == "Em andamento":
+                df_tv_painel = df[df["status"] == "Em andamento"].copy()
+            elif filtro_tv == "Atrasados":
+                df_tv_painel = df[df["sla"] == "Atrasado"].copy()
+            elif filtro_tv == "Urgentes":
+                df_tv_painel = df[df["prioridade"] == "Urgente"].copy()
+            else:
+                df_tv_painel = df.copy()
+
+            st.markdown(
+                f'<div class="filtro-ativo">Filtro ativo: <b>{filtro_tv}</b> • {len(df_tv_painel)} chamado(s)</div>',
+                unsafe_allow_html=True
+            )
 
             colunas_recentes = [
                 "protocolo",
@@ -1362,10 +1493,11 @@ elif menu == "Painel Geral":
                 "responsavel",
                 "criado_em"
             ]
-            colunas_recentes = [c for c in colunas_recentes if c in df.columns]
-            recentes = df[colunas_recentes].head(7).copy()
+            colunas_recentes = [c for c in colunas_recentes if c in df_tv_painel.columns]
+            recentes = df_tv_painel[colunas_recentes].head(12).copy()
             if "criado_em" in recentes.columns:
                 recentes["criado_em"] = recentes["criado_em"].apply(formatar_data)
+
             st.dataframe(recentes, use_container_width=True, hide_index=True)
             st.caption("Atualização automática a cada 30 segundos")
             st.markdown('</div>', unsafe_allow_html=True)
