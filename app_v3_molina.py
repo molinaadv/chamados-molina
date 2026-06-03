@@ -57,7 +57,7 @@ html, body, .stApp {
 }
 
 .block-container {
-    padding-top: 1.2rem;
+    padding-top: 2.4rem !important;
     padding-bottom: 2rem;
     max-width: 100%;
 }
@@ -529,6 +529,33 @@ div[data-testid="stMetric"] {
     margin-bottom:18px;
 }
 
+
+/* V4.2 fixes */
+[data-testid="stSidebar"] .stButton > button {
+    background:rgba(255,255,255,.12) !important;
+    color:white !important;
+    border:1px solid rgba(255,255,255,.45) !important;
+}
+[data-testid="stSidebar"] .stButton > button * {
+    color:white !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background:rgba(37,99,235,.55) !important;
+    color:white !important;
+}
+[data-testid="stSidebar"] {
+    min-width: 285px !important;
+}
+.main-title {
+    padding-top: 8px;
+}
+.right-panel {
+    top:72px !important;
+}
+[data-testid="stHeader"] {
+    background:rgba(255,255,255,.92) !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -705,28 +732,100 @@ if "usuario" not in st.session_state:
     st.session_state.usuario = {}
 
 if not st.session_state.logado:
-    st.markdown('<div class="login-wrap">', unsafe_allow_html=True)
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown('<div class="login-logo">⚖️ MOLINA</div>', unsafe_allow_html=True)
-    st.markdown("### Bem-vindo de volta!")
-    st.caption("Faça login para continuar no sistema de chamados.")
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {display:none;}
+    .block-container {
+        padding-top: 4rem !important;
+        max-width: 980px !important;
+    }
+    .login-page-header {
+        background:linear-gradient(135deg,#04162F,#073763);
+        border-radius:28px;
+        padding:38px 32px;
+        color:white;
+        text-align:center;
+        margin-bottom:28px;
+        box-shadow:0 18px 45px rgba(2,8,23,.22);
+    }
+    .login-page-logo {
+        font-size:42px;
+        font-weight:950;
+        color:white;
+    }
+    .login-page-subtitle {
+        color:#dbeafe;
+        margin-top:8px;
+        font-size:16px;
+    }
+    .login-box {
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:24px;
+        padding:28px;
+        box-shadow:0 16px 38px rgba(15,23,42,.10);
+    }
+    
+/* V4.2 fixes */
+[data-testid="stSidebar"] .stButton > button {
+    background:rgba(255,255,255,.12) !important;
+    color:white !important;
+    border:1px solid rgba(255,255,255,.45) !important;
+}
+[data-testid="stSidebar"] .stButton > button * {
+    color:white !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background:rgba(37,99,235,.55) !important;
+    color:white !important;
+}
+[data-testid="stSidebar"] {
+    min-width: 285px !important;
+}
+.main-title {
+    padding-top: 8px;
+}
+.right-panel {
+    top:72px !important;
+}
+[data-testid="stHeader"] {
+    background:rgba(255,255,255,.92) !important;
+}
 
-    with st.form("login_form"):
-        email = st.text_input("E-mail")
-        senha = st.text_input("Senha", type="password")
-        entrar = st.form_submit_button("Entrar no Sistema", use_container_width=True)
+</style>
+    """, unsafe_allow_html=True)
 
-        if entrar:
-            usuario_login = fazer_login(email, senha)
+    st.markdown("""
+    <div class="login-page-header">
+        <div class="login-page-logo">⚖️ MOLINA</div>
+        <div class="login-page-subtitle">Sistema de Chamados • V360</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-            if usuario_login:
-                st.session_state.logado = True
-                st.session_state.usuario = usuario_login
-                st.rerun()
-            else:
-                st.error("Usuário ou senha inválidos.")
+    col_a, col_b, col_c = st.columns([1, 1.15, 1])
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
+    with col_b:
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
+        st.markdown("### Bem-vindo de volta!")
+        st.caption("Faça login para continuar no sistema de chamados.")
+
+        with st.form("login_form"):
+            email = st.text_input("E-mail")
+            senha = st.text_input("Senha", type="password")
+            entrar = st.form_submit_button("Entrar no Sistema", use_container_width=True)
+
+            if entrar:
+                usuario_login = fazer_login(email, senha)
+
+                if usuario_login:
+                    st.session_state.logado = True
+                    st.session_state.usuario = usuario_login
+                    st.rerun()
+                else:
+                    st.error("Usuário ou senha inválidos.")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.stop()
 
 usuario = st.session_state.usuario
@@ -973,6 +1072,33 @@ if modo_tv:
     padding:8px 12px 14px 12px;
     box-shadow:0 12px 28px rgba(15,23,42,.07);
     margin-bottom:18px;
+}
+
+
+/* V4.2 fixes */
+[data-testid="stSidebar"] .stButton > button {
+    background:rgba(255,255,255,.12) !important;
+    color:white !important;
+    border:1px solid rgba(255,255,255,.45) !important;
+}
+[data-testid="stSidebar"] .stButton > button * {
+    color:white !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background:rgba(37,99,235,.55) !important;
+    color:white !important;
+}
+[data-testid="stSidebar"] {
+    min-width: 285px !important;
+}
+.main-title {
+    padding-top: 8px;
+}
+.right-panel {
+    top:72px !important;
+}
+[data-testid="stHeader"] {
+    background:rgba(255,255,255,.92) !important;
 }
 
 </style>
