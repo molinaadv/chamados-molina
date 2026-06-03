@@ -407,7 +407,8 @@ div[data-testid="stMetric"] {
     margin-top:8px;
 }
 .premium-chart {
-    min-height:360px;
+    min-height:auto;
+    padding-bottom:10px;
 }
 .dark-tv-box {
     background:linear-gradient(180deg,#071A33,#0B274D);
@@ -506,6 +507,26 @@ div[data-testid="stMetric"] {
 }
 [data-testid="stSidebar"] .stRadio label:hover {
     background:rgba(37,99,235,.45);
+}
+
+
+.card-title-only {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-bottom:0;
+    border-radius:22px 22px 0 0;
+    padding:20px 22px 8px 22px;
+    margin-bottom:0;
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+}
+[data-testid="stPlotlyChart"] {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-top:0;
+    border-radius:0 0 22px 22px;
+    padding:8px 12px 14px 12px;
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+    margin-bottom:18px;
 }
 
 </style>
@@ -832,7 +853,8 @@ if modo_tv:
     margin-top:8px;
 }
 .premium-chart {
-    min-height:360px;
+    min-height:auto;
+    padding-bottom:10px;
 }
 .dark-tv-box {
     background:linear-gradient(180deg,#071A33,#0B274D);
@@ -931,6 +953,26 @@ if modo_tv:
 }
 [data-testid="stSidebar"] .stRadio label:hover {
     background:rgba(37,99,235,.45);
+}
+
+
+.card-title-only {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-bottom:0;
+    border-radius:22px 22px 0 0;
+    padding:20px 22px 8px 22px;
+    margin-bottom:0;
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+}
+[data-testid="stPlotlyChart"] {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-top:0;
+    border-radius:0 0 22px 22px;
+    padding:8px 12px 14px 12px;
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+    margin-bottom:18px;
 }
 
 </style>
@@ -1111,7 +1153,7 @@ elif menu == "Painel Geral":
             g1, g2, g3 = st.columns([1.05, 1.05, .95], gap="medium")
 
             with g1:
-                st.markdown('<div class="chart-card premium-chart"><div class="section-title">Chamados por Status</div>', unsafe_allow_html=True)
+                st.markdown('<div class="section-title card-title-only">Chamados por Status</div>', unsafe_allow_html=True)
                 fig_status = px.pie(
                     df,
                     names="status",
@@ -1123,10 +1165,9 @@ elif menu == "Painel Geral":
                     legend=dict(orientation="v", y=.5)
                 )
                 st.plotly_chart(fig_status, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
 
             with g2:
-                st.markdown('<div class="chart-card premium-chart"><div class="section-title">Chamados por Prioridade</div>', unsafe_allow_html=True)
+                st.markdown('<div class="section-title card-title-only">Chamados por Prioridade</div>', unsafe_allow_html=True)
                 prioridade_df = (
                     df.groupby("prioridade")
                     .size()
@@ -1146,10 +1187,9 @@ elif menu == "Painel Geral":
                 )
                 fig_prioridade.update_traces(textposition="outside")
                 st.plotly_chart(fig_prioridade, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
 
             with g3:
-                st.markdown('<div class="chart-card premium-chart"><div class="section-title">Chamados por Setor</div>', unsafe_allow_html=True)
+                st.markdown('<div class="section-title card-title-only">Chamados por Setor</div>', unsafe_allow_html=True)
                 setor_df = (
                     df.groupby("setor")
                     .size()
@@ -1170,7 +1210,6 @@ elif menu == "Painel Geral":
                     showlegend=False
                 )
                 st.plotly_chart(fig_setor, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('<div class="dark-tv-box">', unsafe_allow_html=True)
             tv_top1, tv_top2 = st.columns([2,1])
@@ -1266,14 +1305,29 @@ elif menu == "Painel Geral":
                     ["Aberto", "Em andamento", "Aguardando", "Finalizado", "Cancelado"]
                 )
 
-                responsavel = st.text_input(
+                responsaveis_opcoes = ["Paulo Balbi", "Icaro Bruce", "Alexandre Brito"]
+                responsavel_atual = chamado.get("responsavel")
+
+                if pd.isna(responsavel_atual) or not str(responsavel_atual).strip() or str(responsavel_atual).lower() == "nan":
+                    responsavel_atual = usuario["nome"]
+
+                if responsavel_atual not in responsaveis_opcoes:
+                    responsaveis_opcoes.append(str(responsavel_atual))
+
+                responsavel = st.selectbox(
                     "Responsável",
-                    value=chamado.get("responsavel") or usuario["nome"]
+                    responsaveis_opcoes,
+                    index=responsaveis_opcoes.index(responsavel_atual)
                 )
+
+                observacao_atual = chamado.get("observacoes")
+
+                if pd.isna(observacao_atual) or str(observacao_atual).lower() == "nan":
+                    observacao_atual = ""
 
                 observacoes = st.text_area(
                     "Observações",
-                    value=chamado.get("observacoes") or "",
+                    value=observacao_atual,
                     height=120
                 )
 
