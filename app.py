@@ -7,9 +7,6 @@ import plotly.express as px
 from datetime import datetime, timezone, timedelta
 import bcrypt
 import requests
-import json
-from google.oauth2 import service_account
-from google.auth.transport.requests import Request as GoogleAuthRequest
 
 st.set_page_config(
     page_title="Painel de Chamados - Molina",
@@ -19,6 +16,8 @@ st.set_page_config(
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+BOT_API_SECRET = st.secrets.get("BOT_API_SECRET", "")
+BOT_NOTIFY_URL = st.secrets.get("BOT_NOTIFY_URL", "https://bot-chat-molina.onrender.com/notificar-conclusao")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -77,84 +76,39 @@ def enviar_google_chat(mensagem):
         print(f"Erro Google Chat: {e}")
 
 
-def obter_credenciais_google_chat():
-    try:
-        raw = st.secrets.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
-
-        if not raw:
-            print("GOOGLE_SERVICE_ACCOUNT_JSON não encontrado nos Secrets.")
-            return None
-
-        if isinstance(raw, dict):
-            info = dict(raw)
-        else:
-            raw_texto = str(raw).strip()
-
-            if raw_texto.startswith('"') and raw_texto.endswith('"'):
-                raw_texto = raw_texto[1:-1]
-
-            info = json.loads(raw_texto)
-
-        credentials = service_account.Credentials.from_service_account_info(
-            info,
-            scopes=["https://www.googleapis.com/auth/chat.bot"]
-        )
-
-        credentials.refresh(GoogleAuthRequest())
-        return credentials
-
-    except Exception as e:
-        print(f"Erro ao obter credenciais Google Chat API: {e}")
-        return None
 
 
-def enviar_mensagem_privada_chamado(space_name, thread_name, mensagem):
-    if not space_name:
-        return False, "space_name vazio. O chamado não possui origem do Google Chat."
 
-    credentials = obter_credenciais_google_chat()
+def notificar_conclusao_bot(protocolo, responsavel, email_responsavel, observacao):
+    """
+    Chama o bot no Render para enviar a mensagem de conclusão ao colaborador.
+    Mesmo padrão usado no sistema Pendências Ações.
+    """
+    if not BOT_NOTIFY_URL:
+        return 0, "BOT_NOTIFY_URL não configurado no Streamlit Secrets."
 
-    if not credentials:
-        return False, "Não foi possível carregar as credenciais GOOGLE_SERVICE_ACCOUNT_JSON."
+    if not BOT_API_SECRET:
+        return 0, "BOT_API_SECRET não configurado no Streamlit Secrets."
 
     try:
-        url = f"https://chat.googleapis.com/v1/{space_name}/messages"
-
-        payload = {
-            "text": mensagem
-        }
-
-        if thread_name:
-            payload["thread"] = {
-                "name": thread_name
-            }
-            url += "?messageReplyOption=REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD"
-
-        headers = {
-            "Authorization": f"Bearer {credentials.token}",
-            "Content-Type": "application/json"
-        }
-
-        response = requests.post(
-            url,
-            headers=headers,
-            json=payload,
-            timeout=15
+        resp = requests.post(
+            BOT_NOTIFY_URL,
+            headers={
+                "X-API-KEY": BOT_API_SECRET
+            },
+            json={
+                "protocolo": protocolo,
+                "responsavel": responsavel or "",
+                "email_responsavel": email_responsavel or "",
+                "observacao": observacao or ""
+            },
+            timeout=30
         )
 
-        if response.status_code >= 300:
-            detalhe = f"{response.status_code} - {response.text}"
-            print("Erro ao enviar mensagem privada:")
-            print(detalhe)
-            return False, detalhe
-
-        return True, "Mensagem enviada com sucesso."
+        return resp.status_code, resp.text
 
     except Exception as e:
-        detalhe = f"Erro ao enviar mensagem privada Google Chat: {e}"
-        print(detalhe)
-        return False, detalhe
-
+        return 0, str(e)
 
 def carregar_chamados():
     response = supabase.table("chamados") \
@@ -1104,36 +1058,19 @@ elif menu == "Atualizar Chamado":
             st.success("Chamado atualizado.")
 
             if novo_status == "Finalizado":
-                mensagem_conclusao = (
-                    f"✅ *Seu chamado foi concluído*\n\n"
-                    f"Protocolo: {chamado.get('protocolo', '')}\n"
-                    f"Unidade: {chamado.get('unidade', '')}\n"
-                    f"Setor: {chamado.get('setor', '')}\n"
-                    f"Responsável: {responsavel or usuario['nome']}\n\n"
-                    f"Descrição:\n{chamado.get('descricao', '')}\n\n"
-                    f"Observação:\n{observacoes or 'Chamado finalizado.'}"
+                codigo_notificacao, texto_notificacao = notificar_conclusao_bot(
+                    chamado.get("protocolo", ""),
+                    responsavel or usuario["nome"],
+                    usuario.get("email", ""),
+                    observacoes or "Chamado finalizado."
                 )
 
-                space_name = chamado.get("space_name", "")
-                thread_name = chamado.get("thread_name", "")
-
-                st.write("Tentando enviar conclusão no Google Chat...")
-                st.write("SPACE:", space_name)
-                st.write("THREAD:", thread_name)
-
-                enviado_privado, detalhe_envio = enviar_mensagem_privada_chamado(
-                    space_name,
-                    thread_name,
-                    mensagem_conclusao
-                )
-
-                if enviado_privado:
-                    st.success("O solicitante recebeu a mensagem de conclusão no Google Chat.")
+                if codigo_notificacao in [200, 201]:
+                    st.success("O bot recebeu a solicitação de notificação do solicitante.")
+                    st.code(texto_notificacao)
                 else:
-                    st.error(
-                        "Chamado finalizado, mas não foi possível enviar mensagem privada ao solicitante."
-                    )
-                    st.code(detalhe_envio)
+                    st.error("Chamado finalizado, mas o bot não confirmou o envio ao solicitante.")
+                    st.code(f"{codigo_notificacao} - {texto_notificacao}")
 
             enviar_google_chat(
                 f"✅ *Chamado atualizado*\n\n"
