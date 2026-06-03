@@ -13,7 +13,7 @@ import requests
 # =========================
 
 st.set_page_config(
-    page_title="V360 Molina Chamados",
+    page_title="V360 Chamados Molina - V4",
     layout="wide",
     page_icon="⚖️",
     initial_sidebar_state="expanded"
@@ -349,6 +349,165 @@ div[data-testid="stMetric"] {
     border-radius:18px;
     border:1px solid #e5e7eb;
 }
+
+.online-box {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:12px 16px;
+    color:#0f172a;
+    box-shadow:0 8px 20px rgba(15,23,42,.06);
+}
+.online-dot {
+    display:inline-block;
+    width:10px;
+    height:10px;
+    background:#16a34a;
+    border-radius:50%;
+    margin-right:7px;
+}
+.premium-kpi {
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 10px 28px rgba(15,23,42,.08);
+    min-height:138px;
+}
+.premium-icon {
+    width:44px;
+    height:44px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:23px;
+    margin-bottom:10px;
+}
+.kpi-blue {background:#dbeafe;}
+.kpi-orange {background:#ffedd5;}
+.kpi-purple {background:#ede9fe;}
+.kpi-green {background:#dcfce7;}
+.kpi-red {background:#fee2e2;}
+.premium-label {
+    font-size:13px;
+    font-weight:900;
+    color:#475569;
+}
+.premium-number {
+    font-size:38px;
+    font-weight:950;
+    color:#020617;
+    line-height:1.05;
+}
+.premium-foot {
+    font-size:13px;
+    font-weight:900;
+    color:#2563eb;
+    margin-top:8px;
+}
+.premium-chart {
+    min-height:360px;
+}
+.dark-tv-box {
+    background:linear-gradient(180deg,#071A33,#0B274D);
+    border-radius:22px;
+    padding:18px;
+    box-shadow:0 16px 35px rgba(2,8,23,.18);
+    color:white !important;
+}
+.dark-tv-box * {
+    color:white !important;
+}
+.dark-tv-title {
+    font-size:20px;
+    font-weight:950;
+}
+.live-badge {
+    background:#dc2626;
+    color:white;
+    border-radius:999px;
+    padding:5px 10px;
+    font-size:12px;
+    margin-left:10px;
+}
+.dark-tv-time {
+    text-align:right;
+    font-size:18px;
+    font-weight:900;
+}
+.tv-tab {
+    background:rgba(255,255,255,.08);
+    border-radius:12px;
+    text-align:center;
+    padding:10px;
+    font-weight:900;
+    font-size:13px;
+    margin-bottom:12px;
+}
+.tv-tab.active {
+    background:#2563eb;
+}
+.right-panel {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:26px;
+    padding:22px;
+    box-shadow:0 12px 30px rgba(15,23,42,.08);
+    position:sticky;
+    top:20px;
+}
+.right-title {
+    font-size:30px;
+    font-weight:950;
+    color:#0f172a;
+}
+.right-subtitle {
+    color:#64748b;
+    font-size:14px;
+    margin-bottom:18px;
+}
+.selected-ticket {
+    border:1px solid #dbeafe;
+    border-radius:20px;
+    padding:18px;
+    background:#f8fbff;
+    margin-bottom:16px;
+}
+.selected-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.selected-protocol {
+    font-size:26px;
+    font-weight:950;
+    color:#0f172a;
+}
+.selected-meta {
+    margin-top:12px;
+    color:#475569;
+    font-weight:800;
+    font-size:13px;
+}
+.selected-desc {
+    background:#eef6ff;
+    border-radius:14px;
+    padding:14px;
+    margin-top:14px;
+    color:#0f172a;
+    font-size:14px;
+}
+[data-testid="stSidebar"] .stRadio label {
+    background:rgba(255,255,255,.08);
+    border-radius:12px;
+    padding:8px 10px;
+    margin-bottom:5px;
+}
+[data-testid="stSidebar"] .stRadio label:hover {
+    background:rgba(37,99,235,.45);
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -615,7 +774,166 @@ if modo_tv:
     <style>
     [data-testid="stSidebar"] {display:none;}
     .block-container {padding: 0.5rem 0.5rem 1rem 0.5rem;}
-    </style>
+    
+.online-box {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:12px 16px;
+    color:#0f172a;
+    box-shadow:0 8px 20px rgba(15,23,42,.06);
+}
+.online-dot {
+    display:inline-block;
+    width:10px;
+    height:10px;
+    background:#16a34a;
+    border-radius:50%;
+    margin-right:7px;
+}
+.premium-kpi {
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 10px 28px rgba(15,23,42,.08);
+    min-height:138px;
+}
+.premium-icon {
+    width:44px;
+    height:44px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:23px;
+    margin-bottom:10px;
+}
+.kpi-blue {background:#dbeafe;}
+.kpi-orange {background:#ffedd5;}
+.kpi-purple {background:#ede9fe;}
+.kpi-green {background:#dcfce7;}
+.kpi-red {background:#fee2e2;}
+.premium-label {
+    font-size:13px;
+    font-weight:900;
+    color:#475569;
+}
+.premium-number {
+    font-size:38px;
+    font-weight:950;
+    color:#020617;
+    line-height:1.05;
+}
+.premium-foot {
+    font-size:13px;
+    font-weight:900;
+    color:#2563eb;
+    margin-top:8px;
+}
+.premium-chart {
+    min-height:360px;
+}
+.dark-tv-box {
+    background:linear-gradient(180deg,#071A33,#0B274D);
+    border-radius:22px;
+    padding:18px;
+    box-shadow:0 16px 35px rgba(2,8,23,.18);
+    color:white !important;
+}
+.dark-tv-box * {
+    color:white !important;
+}
+.dark-tv-title {
+    font-size:20px;
+    font-weight:950;
+}
+.live-badge {
+    background:#dc2626;
+    color:white;
+    border-radius:999px;
+    padding:5px 10px;
+    font-size:12px;
+    margin-left:10px;
+}
+.dark-tv-time {
+    text-align:right;
+    font-size:18px;
+    font-weight:900;
+}
+.tv-tab {
+    background:rgba(255,255,255,.08);
+    border-radius:12px;
+    text-align:center;
+    padding:10px;
+    font-weight:900;
+    font-size:13px;
+    margin-bottom:12px;
+}
+.tv-tab.active {
+    background:#2563eb;
+}
+.right-panel {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:26px;
+    padding:22px;
+    box-shadow:0 12px 30px rgba(15,23,42,.08);
+    position:sticky;
+    top:20px;
+}
+.right-title {
+    font-size:30px;
+    font-weight:950;
+    color:#0f172a;
+}
+.right-subtitle {
+    color:#64748b;
+    font-size:14px;
+    margin-bottom:18px;
+}
+.selected-ticket {
+    border:1px solid #dbeafe;
+    border-radius:20px;
+    padding:18px;
+    background:#f8fbff;
+    margin-bottom:16px;
+}
+.selected-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.selected-protocol {
+    font-size:26px;
+    font-weight:950;
+    color:#0f172a;
+}
+.selected-meta {
+    margin-top:12px;
+    color:#475569;
+    font-weight:800;
+    font-size:13px;
+}
+.selected-desc {
+    background:#eef6ff;
+    border-radius:14px;
+    padding:14px;
+    margin-top:14px;
+    color:#0f172a;
+    font-size:14px;
+}
+[data-testid="stSidebar"] .stRadio label {
+    background:rgba(255,255,255,.08);
+    border-radius:12px;
+    padding:8px 10px;
+    margin-bottom:5px;
+}
+[data-testid="stSidebar"] .stRadio label:hover {
+    background:rgba(37,99,235,.45);
+}
+
+</style>
     """, unsafe_allow_html=True)
 
 
@@ -717,25 +1035,15 @@ if menu == "Abrir Chamado":
 
 
 # =========================
-# PAINEL GERAL V3
+# PAINEL GERAL V4
 # =========================
 
 elif menu == "Painel Geral":
-    top1, top2, top3 = st.columns([2.2, 1, 1])
-    with top1:
-        st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
-        st.markdown('<div class="main-subtitle">Visão geral dos chamados do sistema.</div>', unsafe_allow_html=True)
-    with top2:
-        st.markdown("🟢 **Sistema online**")
-        st.caption(f"Atualizado em {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-    with top3:
-        if st.button("🔄 Atualizar dados", use_container_width=True):
-            st.rerun()
-
     df = carregar_chamados()
     df = aplicar_permissao_chamados(df, usuario)
 
     if df.empty:
+        st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
         st.info("Nenhum chamado encontrado.")
 
     else:
@@ -749,132 +1057,311 @@ elif menu == "Painel Geral":
         urgentes = len(df[df["prioridade"] == "Urgente"])
         atrasados = len(df[df["sla"] == "Atrasado"])
 
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        esquerda, direita = st.columns([2.35, 1.15], gap="large")
 
-        kpis = [
-            ("📋", "Total de Chamados", total, "+ hoje", "#dbeafe"),
-            ("🟠", "Abertos", abertos, "- hoje", "#ffedd5"),
-            ("🔎", "Em Andamento", andamento, "+ hoje", "#ede9fe"),
-            ("✅", "Finalizados", finalizados, "+ mês", "#dcfce7"),
-            ("🚨", "Urgentes", urgentes, "+ hoje", "#fee2e2"),
-            ("⏱️", "Atrasados", atrasados, "+ SLA", "#fee2e2")
-        ]
+        with esquerda:
+            topo1, topo2, topo3 = st.columns([1.7, 1, 1])
 
-        for col, (icon, label, num, foot, bg) in zip([col1,col2,col3,col4,col5,col6], kpis):
-            with col:
+            with topo1:
+                st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
+                st.markdown('<div class="main-subtitle">Visão geral dos chamados do sistema.</div>', unsafe_allow_html=True)
+
+            with topo2:
                 st.markdown(
                     f"""
-                    <div class="kpi-card">
-                        <div class="kpi-icon" style="background:{bg};">{icon}</div>
-                        <div class="kpi-label">{label}</div>
-                        <div class="kpi-number">{num}</div>
-                        <div class="kpi-foot">{foot}</div>
+                    <div class="online-box">
+                        <span class="online-dot"></span>
+                        <b>Última atualização:</b><br>
+                        {datetime.now().strftime('%d/%m/%Y %H:%M')}
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-        st.write("")
+            with topo3:
+                if st.button("🔄 Atualizar dados", use_container_width=True):
+                    st.rerun()
 
-        colg1, colg2 = st.columns(2)
+            k1, k2, k3, k4, k5 = st.columns(5)
 
-        with colg1:
-            st.markdown('<div class="chart-card"><div class="section-title">Chamados por Status</div>', unsafe_allow_html=True)
-            fig_status = px.pie(
-                df,
-                names="status",
-                hole=0.55
-            )
-            fig_status.update_layout(
-                height=330,
-                margin=dict(t=10,b=10,l=10,r=10),
-                legend=dict(orientation="v")
-            )
-            st.plotly_chart(fig_status, use_container_width=True)
+            kpis = [
+                (k1, "📋", "Total de Chamados", total, "+ hoje", "kpi-blue"),
+                (k2, "🟠", "Abertos", abertos, "- hoje", "kpi-orange"),
+                (k3, "🔍", "Em Andamento", andamento, "+ hoje", "kpi-purple"),
+                (k4, "✅", "Finalizados", finalizados, "+ mês", "kpi-green"),
+                (k5, "⏱️", "Atrasados (SLA)", atrasados, "+ SLA", "kpi-red"),
+            ]
+
+            for col, icon, label, num, foot, classe in kpis:
+                with col:
+                    st.markdown(
+                        f"""
+                        <div class="premium-kpi">
+                            <div class="premium-icon {classe}">{icon}</div>
+                            <div class="premium-label">{label}</div>
+                            <div class="premium-number">{num}</div>
+                            <div class="premium-foot">{foot}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+            st.write("")
+
+            g1, g2, g3 = st.columns([1.05, 1.05, .95], gap="medium")
+
+            with g1:
+                st.markdown('<div class="chart-card premium-chart"><div class="section-title">Chamados por Status</div>', unsafe_allow_html=True)
+                fig_status = px.pie(
+                    df,
+                    names="status",
+                    hole=0.58
+                )
+                fig_status.update_layout(
+                    height=310,
+                    margin=dict(t=5,b=5,l=5,r=5),
+                    legend=dict(orientation="v", y=.5)
+                )
+                st.plotly_chart(fig_status, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with g2:
+                st.markdown('<div class="chart-card premium-chart"><div class="section-title">Chamados por Prioridade</div>', unsafe_allow_html=True)
+                prioridade_df = (
+                    df.groupby("prioridade")
+                    .size()
+                    .reset_index(name="quantidade")
+                    .sort_values("quantidade", ascending=False)
+                )
+                fig_prioridade = px.bar(
+                    prioridade_df,
+                    x="prioridade",
+                    y="quantidade",
+                    text="quantidade"
+                )
+                fig_prioridade.update_layout(
+                    height=310,
+                    margin=dict(t=5,b=5,l=5,r=5),
+                    showlegend=False
+                )
+                fig_prioridade.update_traces(textposition="outside")
+                st.plotly_chart(fig_prioridade, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with g3:
+                st.markdown('<div class="chart-card premium-chart"><div class="section-title">Chamados por Setor</div>', unsafe_allow_html=True)
+                setor_df = (
+                    df.groupby("setor")
+                    .size()
+                    .reset_index(name="quantidade")
+                    .sort_values("quantidade", ascending=True)
+                    .tail(8)
+                )
+                fig_setor = px.bar(
+                    setor_df,
+                    x="quantidade",
+                    y="setor",
+                    orientation="h",
+                    text="quantidade"
+                )
+                fig_setor.update_layout(
+                    height=310,
+                    margin=dict(t=5,b=5,l=5,r=5),
+                    showlegend=False
+                )
+                st.plotly_chart(fig_setor, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="dark-tv-box">', unsafe_allow_html=True)
+            tv_top1, tv_top2 = st.columns([2,1])
+            with tv_top1:
+                st.markdown('<div class="dark-tv-title">📺 TV OPERACIONAL - CHAMADOS AO VIVO <span class="live-badge">AO VIVO</span></div>', unsafe_allow_html=True)
+            with tv_top2:
+                st.markdown(f'<div class="dark-tv-time">{datetime.now().strftime("%d/%m/%Y %H:%M")}</div>', unsafe_allow_html=True)
+
+            tabs1, tabs2, tabs3, tabs4, tabs5 = st.columns(5)
+            tabs1.markdown(f'<div class="tv-tab active">Todos&nbsp;&nbsp;{total}</div>', unsafe_allow_html=True)
+            tabs2.markdown(f'<div class="tv-tab">Abertos&nbsp;&nbsp;{abertos}</div>', unsafe_allow_html=True)
+            tabs3.markdown(f'<div class="tv-tab">Em andamento&nbsp;&nbsp;{andamento}</div>', unsafe_allow_html=True)
+            tabs4.markdown(f'<div class="tv-tab">Atrasados&nbsp;&nbsp;{atrasados}</div>', unsafe_allow_html=True)
+            tabs5.markdown(f'<div class="tv-tab">Urgentes&nbsp;&nbsp;{urgentes}</div>', unsafe_allow_html=True)
+
+            colunas_recentes = [
+                "protocolo",
+                "unidade",
+                "setor",
+                "descricao",
+                "prioridade",
+                "status",
+                "sla",
+                "responsavel",
+                "criado_em"
+            ]
+            colunas_recentes = [c for c in colunas_recentes if c in df.columns]
+            recentes = df[colunas_recentes].head(7).copy()
+            if "criado_em" in recentes.columns:
+                recentes["criado_em"] = recentes["criado_em"].apply(formatar_data)
+            st.dataframe(recentes, use_container_width=True, hide_index=True)
+            st.caption("Atualização automática a cada 30 segundos")
             st.markdown('</div>', unsafe_allow_html=True)
 
-        with colg2:
-            st.markdown('<div class="chart-card"><div class="section-title">Chamados por Prioridade</div>', unsafe_allow_html=True)
-            prioridade_df = (
-                df.groupby("prioridade")
-                .size()
-                .reset_index(name="quantidade")
-                .sort_values("quantidade", ascending=False)
-            )
-            fig_prioridade = px.bar(
-                prioridade_df,
-                x="prioridade",
-                y="quantidade",
-                text="quantidade"
-            )
-            fig_prioridade.update_layout(height=330, margin=dict(t=10,b=10,l=10,r=10))
-            fig_prioridade.update_traces(textposition="outside")
-            st.plotly_chart(fig_prioridade, use_container_width=True)
+        with direita:
+            st.markdown('<div class="right-panel">', unsafe_allow_html=True)
+            st.markdown('<div class="right-title">Atualizar Chamado</div>', unsafe_allow_html=True)
+            st.markdown('<div class="right-subtitle">Gerencie e atualize os chamados do sistema</div>', unsafe_allow_html=True)
+
+            df_abertos = df[~df["status"].isin(["Finalizado", "Cancelado"])].copy()
+
+            busca = st.text_input("Buscar chamado", placeholder="Protocolo, unidade, descrição...")
+
+            if busca and not df_abertos.empty:
+                termo = busca.lower().strip()
+                df_abertos = df_abertos[
+                    df_abertos.astype(str).apply(
+                        lambda linha: termo in " ".join(linha.values).lower(),
+                        axis=1
+                    )
+                ]
+
+            if df_abertos.empty:
+                st.info("Nenhum chamado aberto.")
+            else:
+                df_abertos["opcao"] = (
+                    df_abertos["protocolo"].fillna(df_abertos["id"].astype(str))
+                    + " - "
+                    + df_abertos["descricao"].fillna("").str[:38]
+                )
+
+                chamado_opcao = st.selectbox(
+                    "Chamados abertos",
+                    df_abertos["opcao"].tolist(),
+                    label_visibility="collapsed"
+                )
+
+                chamado = df_abertos[df_abertos["opcao"] == chamado_opcao].iloc[0]
+
+                st.markdown(
+                    f"""
+                    <div class="selected-ticket">
+                        <div class="selected-header">
+                            <span class="selected-protocol">{chamado.get('protocolo','')}</span>
+                            <span class="badge {prioridade_badge(chamado.get('prioridade',''))}">{chamado.get('prioridade','')}</span>
+                        </div>
+                        <div class="selected-meta">
+                            📍 {chamado.get('unidade','')} &nbsp; • &nbsp;
+                            🏢 {chamado.get('setor','')} &nbsp; • &nbsp;
+                            👤 {chamado.get('solicitante','')}
+                        </div>
+                        <div class="selected-desc">
+                            <b>Descrição do problema</b><br>
+                            {chamado.get('descricao','')}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                novo_status = st.selectbox(
+                    "Atualizar Status",
+                    ["Aberto", "Em andamento", "Aguardando", "Finalizado", "Cancelado"]
+                )
+
+                responsavel = st.text_input(
+                    "Responsável",
+                    value=chamado.get("responsavel") or usuario["nome"]
+                )
+
+                observacoes = st.text_area(
+                    "Observações",
+                    value=chamado.get("observacoes") or "",
+                    height=120
+                )
+
+                col_a, col_b = st.columns([1, 1.3])
+
+                with col_a:
+                    salvar = st.button("💾 Salvar", use_container_width=True)
+
+                with col_b:
+                    responder = st.button("💬 Responder Solicitante", use_container_width=True)
+
+                if salvar or responder:
+                    dados_update = {
+                        "status": novo_status,
+                        "responsavel": responsavel,
+                        "observacoes": observacoes,
+                        "atualizado_em": datetime.now(timezone.utc).isoformat()
+                    }
+
+                    if novo_status == "Finalizado":
+                        dados_update["finalizado_em"] = datetime.now(timezone.utc).isoformat()
+
+                    supabase.table("chamados") \
+                        .update(dados_update) \
+                        .eq("id", int(chamado["id"])) \
+                        .execute()
+
+                    supabase.table("historico_chamados") \
+                        .insert({
+                            "chamado_id": int(chamado["id"]),
+                            "acao": f"Status alterado para {novo_status}",
+                            "usuario": responsavel or usuario["nome"],
+                            "observacao": observacoes
+                        }) \
+                        .execute()
+
+                    st.success("Chamado atualizado.")
+
+                    if novo_status == "Finalizado":
+                        ok, detalhe = notificar_conclusao_bot(
+                            chamado,
+                            responsavel or usuario["nome"],
+                            observacoes
+                        )
+
+                        if ok:
+                            st.success("Solicitante notificado no Google Chat.")
+                        else:
+                            st.warning("Não foi possível notificar o solicitante.")
+                            st.code(detalhe)
+
+                    enviar_google_chat(
+                        f"✅ *Chamado atualizado*\\n\\n"
+                        f"Protocolo: {chamado.get('protocolo', '')}\\n"
+                        f"Novo status: {novo_status}\\n"
+                        f"Responsável: {responsavel}\\n"
+                        f"Observação: {observacoes}"
+                    )
+
+                st.markdown('<div class="section-title">Histórico do Chamado</div>', unsafe_allow_html=True)
+
+                try:
+                    hist = supabase.table("historico_chamados") \
+                        .select("*") \
+                        .eq("chamado_id", int(chamado["id"])) \
+                        .order("criado_em", desc=True) \
+                        .limit(4) \
+                        .execute()
+
+                    for h in hist.data or []:
+                        st.markdown(
+                            f"""
+                            <div class="timeline-item">
+                                <b>{formatar_data(h.get('criado_em',''))}</b><br>
+                                {h.get('usuario','')} - {h.get('acao','')}<br>
+                                <small>{h.get('observacao','')}</small>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                except Exception:
+                    st.caption("Histórico indisponível.")
+
             st.markdown('</div>', unsafe_allow_html=True)
-
-        colg3, colg4 = st.columns(2)
-
-        with colg3:
-            st.markdown('<div class="chart-card"><div class="section-title">Chamados por Setor</div>', unsafe_allow_html=True)
-            setor_df = (
-                df.groupby("setor")
-                .size()
-                .reset_index(name="quantidade")
-                .sort_values("quantidade", ascending=True)
-            )
-            fig_setor = px.bar(
-                setor_df,
-                x="quantidade",
-                y="setor",
-                orientation="h",
-                text="quantidade"
-            )
-            fig_setor.update_layout(height=330, margin=dict(t=10,b=10,l=10,r=10))
-            st.plotly_chart(fig_setor, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with colg4:
-            st.markdown('<div class="chart-card"><div class="section-title">Chamados por Período</div>', unsafe_allow_html=True)
-            df_periodo = df.dropna(subset=["criado_em"]).copy()
-            df_periodo["data"] = df_periodo["criado_em"].dt.date
-            periodo = (
-                df_periodo.groupby("data")
-                .size()
-                .reset_index(name="quantidade")
-                .tail(14)
-            )
-            fig_periodo = px.line(
-                periodo,
-                x="data",
-                y="quantidade",
-                markers=True,
-                text="quantidade"
-            )
-            fig_periodo.update_layout(height=330, margin=dict(t=10,b=10,l=10,r=10))
-            st.plotly_chart(fig_periodo, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('<div class="chart-card"><div class="section-title">Chamados Recentes</div>', unsafe_allow_html=True)
-        colunas_recentes = [
-            "protocolo",
-            "unidade",
-            "setor",
-            "descricao",
-            "prioridade",
-            "status",
-            "responsavel",
-            "criado_em"
-        ]
-        colunas_recentes = [c for c in colunas_recentes if c in df.columns]
-        recentes = df[colunas_recentes].head(8).copy()
-        if "criado_em" in recentes.columns:
-            recentes["criado_em"] = recentes["criado_em"].apply(formatar_data)
-        st.dataframe(recentes, use_container_width=True, hide_index=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =========================
-# ATUALIZAR CHAMADO V3
+# ATUALIZAR CHAMADO V4
 # =========================
 
 elif menu == "Atualizar Chamado":
