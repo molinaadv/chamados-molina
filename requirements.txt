@@ -1,8 +1,11 @@
+# V360 - app "molina" (chamados-molina). Versoes FIXADAS. Python 3.12 no Streamlit Cloud.
+# pyarrow fixado p/ evitar Segmentation fault no startup.
 streamlit==1.40.2
 streamlit-autorefresh==1.0.1
 supabase==2.31.0
 pandas==2.2.3
 numpy==1.26.4
+pyarrow==16.1.0
 plotly==5.24.1
 bcrypt==4.2.1
 requests==2.32.3
