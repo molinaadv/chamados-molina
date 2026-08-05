@@ -7,6 +7,7 @@ import plotly.express as px
 from datetime import datetime, timezone, timedelta
 import bcrypt
 import requests
+import html as html_lib
 
 # =========================
 # CONFIGURAÇÃO
@@ -759,6 +760,265 @@ st.markdown("""
     color:#0f172a;
     display:block;
     margin-bottom:3px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+# CSS adicional para aproximar o Insights do protótipo HTML.
+st.markdown("""
+<style>
+.insight-summary-grid {
+    display:grid;
+    grid-template-columns:1.45fr .75fr;
+    gap:20px;
+    align-items:stretch;
+}
+.insight-summary-stats {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+.insight-mini-stat {
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:15px;
+    padding:13px;
+}
+.insight-mini-stat-label {
+    font-size:11px;
+    color:#c9d8f2 !important;
+    margin-bottom:5px;
+}
+.insight-mini-stat-value {
+    font-size:22px;
+    font-weight:950;
+    color:white !important;
+}
+.insight-proto-panel {
+    background:#ffffff;
+    border:1px solid #e3e9f2;
+    border-radius:24px;
+    padding:21px;
+    box-shadow:0 14px 34px rgba(15,23,42,.08);
+    margin-bottom:20px;
+}
+.insight-proto-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:17px;
+}
+.insight-proto-title {
+    color:#132238;
+    font-size:22px;
+    font-weight:950;
+    line-height:1.15;
+}
+.insight-proto-subtitle {
+    color:#6b7b91;
+    font-size:13px;
+    margin-top:6px;
+}
+.insight-tag {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:950;
+    white-space:nowrap;
+}
+.insight-tag-red {background:#fee2e2;color:#991b1b;}
+.insight-tag-orange {background:#ffedd5;color:#9a3412;}
+.insight-tag-green {background:#dcfce7;color:#166534;}
+.insight-rank-list,
+.insight-problem-list,
+.insight-actions-list {
+    display:flex;
+    flex-direction:column;
+    gap:11px;
+}
+.insight-rank-row {
+    display:grid;
+    grid-template-columns:46px minmax(0,1fr) 76px;
+    align-items:center;
+    gap:12px;
+    border:1px solid #e1e8f2;
+    border-radius:16px;
+    padding:13px;
+    background:#fff;
+}
+.insight-rank-position {
+    width:40px;
+    height:40px;
+    border-radius:13px;
+    background:#eef4ff;
+    color:#2563eb;
+    font-weight:950;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.insight-rank-name {
+    color:#0f172a;
+    font-size:15px;
+    font-weight:950;
+}
+.insight-rank-meta {
+    color:#6b7b91;
+    font-size:11px;
+    margin-top:4px;
+    line-height:1.35;
+}
+.insight-rank-score {
+    text-align:right;
+}
+.insight-rank-score strong {
+    display:block;
+    color:#0f172a;
+    font-size:21px;
+    font-weight:950;
+}
+.insight-delta-up {color:#dc2626;font-size:10px;font-weight:950;}
+.insight-delta-down {color:#16a34a;font-size:10px;font-weight:950;}
+.insight-problem-row {
+    border:1px solid #e1e8f2;
+    border-radius:16px;
+    padding:14px;
+    background:#fff;
+}
+.insight-problem-top {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+.insight-problem-name {
+    color:#0f172a;
+    font-size:14px;
+    font-weight:950;
+}
+.insight-problem-count {
+    color:#0f172a;
+    font-size:14px;
+    font-weight:950;
+}
+.insight-problem-meta {
+    color:#6b7b91;
+    font-size:11px;
+    margin-top:5px;
+}
+.insight-progress {
+    height:8px;
+    background:#edf2f7;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:11px;
+}
+.insight-progress-fill {
+    height:100%;
+    background:#2563eb;
+    border-radius:999px;
+}
+.insight-table-wrap {
+    overflow:auto;
+    border:1px solid #e3e9f2;
+    border-radius:15px;
+}
+.insight-table {
+    width:100%;
+    border-collapse:collapse;
+    min-width:720px;
+}
+.insight-table th,
+.insight-table td {
+    padding:11px 12px;
+    border-bottom:1px solid #e8edf4;
+    text-align:left;
+    font-size:12px;
+    color:#334155;
+}
+.insight-table th {
+    background:#edf4ff;
+    color:#506078;
+    text-transform:uppercase;
+    font-size:10px;
+    letter-spacing:.3px;
+}
+.insight-table tr:last-child td {border-bottom:0;}
+.insight-time-red {color:#dc2626 !important;font-weight:950;}
+.insight-time-orange {color:#f97316 !important;font-weight:950;}
+.insight-time-yellow {color:#a16207 !important;font-weight:950;}
+.insight-status-pill {
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#ede9fe;
+    color:#5b21b6;
+    font-size:10px;
+    font-weight:900;
+}
+.insight-action {
+    display:flex;
+    gap:11px;
+    align-items:flex-start;
+    border:1px solid #e5e7eb;
+    background:#fbfcfe;
+    border-radius:15px;
+    padding:13px;
+}
+.insight-action-number {
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#dbeafe;
+    color:#1d4ed8;
+    font-weight:950;
+}
+.insight-action-text {
+    color:#64748b;
+    font-size:12px;
+    line-height:1.45;
+}
+.insight-action-text strong {
+    display:block;
+    color:#0f172a;
+    font-size:13px;
+    margin-bottom:3px;
+}
+.insight-priority-box {
+    background:linear-gradient(180deg,#fff7ed,#ffffff);
+    border:1px solid #fed7aa;
+    border-radius:18px;
+    padding:18px;
+    margin-top:13px;
+}
+.insight-priority-label {
+    color:#9a3412;
+    font-size:11px;
+    font-weight:950;
+}
+.insight-priority-main {
+    color:#c2410c;
+    font-size:34px;
+    font-weight:950;
+    margin:6px 0;
+}
+.insight-priority-text {
+    color:#7c2d12;
+    font-size:12px;
+    line-height:1.5;
+}
+@media (max-width: 1000px) {
+    .insight-summary-grid {grid-template-columns:1fr;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1894,6 +2154,7 @@ elif menu == "Painel Geral":
 # INSIGHTS CHAMADOS TI
 # =========================
 
+
 elif menu == "Insights":
     df = carregar_chamados()
     df = aplicar_permissao_chamados(df, usuario)
@@ -1939,6 +2200,7 @@ elif menu == "Insights":
 
         if "criado_em" not in df.columns:
             df["criado_em"] = pd.NaT
+
         df["criado_em"] = pd.to_datetime(df["criado_em"], errors="coerce", utc=True)
 
         unidades_disponiveis = sorted(
@@ -1970,6 +2232,22 @@ elif menu == "Insights":
             st.warning("Não há chamados no período e filtro selecionados.")
 
         else:
+            def esc(valor):
+                return html_lib.escape(str(valor if valor is not None else ""))
+
+            def tempo_restante_html(horas):
+                horas = float(horas)
+                if horas < 1:
+                    texto = f"{max(0, int(horas * 60))} min"
+                    classe = "insight-time-red"
+                elif horas <= 4:
+                    texto = f"{int(horas)}h {int((horas - int(horas)) * 60):02d}min"
+                    classe = "insight-time-orange"
+                else:
+                    texto = f"{int(horas)}h {int((horas - int(horas)) * 60):02d}min"
+                    classe = "insight-time-yellow"
+                return texto, classe
+
             df_periodo["sla"] = df_periodo.apply(calcular_sla, axis=1)
 
             status_encerrados = ["Finalizado", "Cancelado"]
@@ -2044,6 +2322,16 @@ elif menu == "Insights":
                 ascending=False
             )
 
+            categoria_por_unidade = (
+                df_periodo.groupby(["unidade", "categoria"])
+                .size()
+                .reset_index(name="quantidade")
+                .sort_values(["unidade", "quantidade"], ascending=[True, False])
+                .drop_duplicates("unidade")
+                .set_index("unidade")["categoria"]
+                .to_dict()
+            )
+
             unidade_atencao = (
                 ranking_unidades.iloc[0]["unidade"]
                 if not ranking_unidades.empty
@@ -2074,22 +2362,45 @@ elif menu == "Insights":
                 else "Sem responsável"
             )
             qtd_maior_fila = int(fila_responsavel.iloc[0]) if not fila_responsavel.empty else 0
+            vence_2h = len(df_proximos[df_proximos["horas_restantes"] <= 2]) if not df_proximos.empty else 0
 
             resumo = (
-                f"A categoria <b>{categoria_top}</b> concentra a maior quantidade de chamados "
+                f"A categoria <b>{esc(categoria_top)}</b> concentra a maior quantidade de chamados "
                 f"no período, com <b>{qtd_categoria_top}</b> ocorrência(s). "
-                f"A unidade <b>{unidade_atencao}</b> aparece como principal ponto de atenção. "
+                f"A unidade <b>{esc(unidade_atencao)}</b> aparece como principal ponto de atenção. "
                 f"Existem <b>{atrasados} chamado(s) atrasado(s)</b> e "
                 f"<b>{proximos} próximo(s) do vencimento do SLA</b>. "
                 f"A prioridade recomendada é atuar primeiro nos chamados atrasados, "
-                f"nos protocolos próximos do prazo e nas ocorrências recorrentes de {categoria_top}."
+                f"nos protocolos próximos do prazo e nas ocorrências recorrentes."
             )
 
             st.markdown(
                 f"""
                 <div class="insight-summary">
-                    <div class="insight-summary-title">💡 Resumo inteligente do período</div>
-                    <div class="insight-summary-text">{resumo}</div>
+                    <div class="insight-summary-grid">
+                        <div>
+                            <div class="insight-summary-title">💡 Resumo inteligente do período</div>
+                            <div class="insight-summary-text">{resumo}</div>
+                        </div>
+                        <div class="insight-summary-stats">
+                            <div class="insight-mini-stat">
+                                <div class="insight-mini-stat-label">Chamados analisados</div>
+                                <div class="insight-mini-stat-value">{total_periodo}</div>
+                            </div>
+                            <div class="insight-mini-stat">
+                                <div class="insight-mini-stat-label">Alertas gerados</div>
+                                <div class="insight-mini-stat-value">{atrasados + proximos}</div>
+                            </div>
+                            <div class="insight-mini-stat">
+                                <div class="insight-mini-stat-label">Dentro do SLA</div>
+                                <div class="insight-mini-stat-value">{dentro_sla}%</div>
+                            </div>
+                            <div class="insight-mini-stat">
+                                <div class="insight-mini-stat-label">Reincidência</div>
+                                <div class="insight-mini-stat-value">{taxa_reincidencia}%</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -2097,219 +2408,356 @@ elif menu == "Insights":
 
             k1, k2, k3, k4 = st.columns(4)
 
-            with k1:
-                atrasados_unidade = int(dados_unidade_atencao["atrasados"]) if dados_unidade_atencao is not None else 0
-                chamados_unidade = int(dados_unidade_atencao["chamados"]) if dados_unidade_atencao is not None else 0
-                st.markdown(
-                    f"""
-                    <div class="insight-card">
-                        <div class="insight-card-icon kpi-red">⚠️</div>
-                        <div class="insight-card-label">Unidade que exige atenção</div>
-                        <div class="insight-card-main">{unidade_atencao}</div>
-                        <div class="insight-card-foot">
-                            {chamados_unidade} chamado(s) • {atrasados_unidade} atrasado(s) •
-                            variação de {crescimento_unidade:+d}% contra o período anterior
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+            atrasados_unidade = int(dados_unidade_atencao["atrasados"]) if dados_unidade_atencao is not None else 0
+            chamados_unidade = int(dados_unidade_atencao["chamados"]) if dados_unidade_atencao is not None else 0
+            categoria_unidade_atencao = categoria_por_unidade.get(unidade_atencao, "Geral")
+
+            cards = [
+                (
+                    k1, "⚠️", "kpi-red", "Unidade que exige atenção",
+                    unidade_atencao,
+                    f"{chamados_unidade} chamado(s) • {atrasados_unidade} atrasado(s) • principal problema: {categoria_unidade_atencao}"
+                ),
+                (
+                    k2, "🔁", "kpi-orange", "Problema mais recorrente",
+                    categoria_top,
+                    f"{qtd_categoria_top} ocorrência(s) em {df_periodo[df_periodo['categoria'] == categoria_top]['unidade'].nunique()} unidade(s)"
+                ),
+                (
+                    k3, "⏳", "kpi-purple", "Próximos de atrasar",
+                    f"{proximos} chamado(s)",
+                    f"{vence_2h} vence(m) em menos de 2 horas"
+                ),
+                (
+                    k4, "👥", "kpi-blue", "Responsável com maior fila",
+                    responsavel_maior_fila,
+                    f"{qtd_maior_fila} chamado(s) ativo(s) • recomendada análise de distribuição"
                 )
+            ]
 
-            with k2:
-                st.markdown(
-                    f"""
-                    <div class="insight-card">
-                        <div class="insight-card-icon kpi-orange">🔁</div>
-                        <div class="insight-card-label">Problema mais recorrente</div>
-                        <div class="insight-card-main">{categoria_top}</div>
-                        <div class="insight-card-foot">
-                            {qtd_categoria_top} ocorrência(s) • reincidência estimada em {taxa_reincidencia}%
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            with k3:
-                vence_2h = len(df_proximos[df_proximos["horas_restantes"] <= 2]) if not df_proximos.empty else 0
-                st.markdown(
-                    f"""
-                    <div class="insight-card">
-                        <div class="insight-card-icon kpi-purple">⏳</div>
-                        <div class="insight-card-label">Próximos de atrasar</div>
-                        <div class="insight-card-main">{proximos} chamado(s)</div>
-                        <div class="insight-card-foot">{vence_2h} vence(m) em até 2 horas</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            with k4:
-                st.markdown(
-                    f"""
-                    <div class="insight-card">
-                        <div class="insight-card-icon kpi-blue">👥</div>
-                        <div class="insight-card-label">Responsável com maior fila</div>
-                        <div class="insight-card-main">{responsavel_maior_fila}</div>
-                        <div class="insight-card-foot">
-                            {qtd_maior_fila} chamado(s) ativo(s) • {dentro_sla}% da fila ainda dentro do SLA
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            st.write("")
-            esquerda, direita = st.columns(2, gap="large")
-
-            with esquerda:
-                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-title">Unidades que precisam de atenção</div>', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-subtitle">Ranking baseado em volume, atraso e urgência.</div>', unsafe_allow_html=True)
-
-                ranking_exibir = ranking_unidades.head(8).copy()
-                ranking_exibir.insert(0, "posição", range(1, len(ranking_exibir) + 1))
-                ranking_exibir = ranking_exibir.rename(columns={
-                    "posição": "Posição",
-                    "unidade": "Unidade",
-                    "chamados": "Chamados",
-                    "ativos": "Ativos",
-                    "atrasados": "Atrasados",
-                    "urgentes": "Urgentes",
-                    "pontuacao": "Índice de atenção"
-                })
-                st.dataframe(
-                    ranking_exibir[["Posição", "Unidade", "Chamados", "Ativos", "Atrasados", "Urgentes", "Índice de atenção"]],
-                    use_container_width=True,
-                    hide_index=True
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            with direita:
-                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-title">Problemas recorrentes</div>', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-subtitle">Categorias com maior concentração de chamados no período.</div>', unsafe_allow_html=True)
-
-                recorrentes = (
-                    df_periodo.groupby("categoria")
-                    .agg(
-                        ocorrencias=("categoria", "size"),
-                        unidades_afetadas=("unidade", "nunique"),
-                        atrasados=("sla", lambda serie: int((serie == "Atrasado").sum()))
-                    )
-                    .reset_index()
-                    .sort_values(["ocorrencias", "atrasados"], ascending=False)
-                    .head(8)
-                    .rename(columns={
-                        "categoria": "Categoria",
-                        "ocorrencias": "Ocorrências",
-                        "unidades_afetadas": "Unidades afetadas",
-                        "atrasados": "Atrasados"
-                    })
-                )
-                st.dataframe(recorrentes, use_container_width=True, hide_index=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
-            st.markdown('<div class="insight-panel-title">Risco de SLA</div>', unsafe_allow_html=True)
-            st.markdown('<div class="insight-panel-subtitle">Chamados que ainda não atrasaram, mas exigem atenção nas próximas 24 horas.</div>', unsafe_allow_html=True)
-
-            if df_proximos.empty:
-                st.success("Nenhum chamado corre risco de vencer nas próximas 24 horas.")
-            else:
-                sla_exibir = df_proximos.copy()
-                sla_exibir["Tempo restante"] = sla_exibir["horas_restantes"].apply(
-                    lambda horas: (
-                        f"{int(horas)}h {int((horas - int(horas)) * 60):02d}min"
-                        if horas >= 1
-                        else f"{max(0, int(horas * 60))} min"
-                    )
-                )
-                colunas_sla = ["protocolo", "unidade", "setor", "categoria", "responsavel", "prioridade", "Tempo restante"]
-                colunas_sla = [c for c in colunas_sla if c in sla_exibir.columns]
-                sla_exibir = sla_exibir[colunas_sla].head(12).rename(columns={
-                    "protocolo": "Protocolo",
-                    "unidade": "Unidade",
-                    "setor": "Setor",
-                    "categoria": "Categoria",
-                    "responsavel": "Responsável",
-                    "prioridade": "Prioridade"
-                })
-                st.dataframe(sla_exibir, use_container_width=True, hide_index=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            produtividade_col, recomendacoes_col = st.columns([1.1, .9], gap="large")
-
-            with produtividade_col:
-                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-title">Produtividade e carga da equipe</div>', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-subtitle">Chamados ativos e finalizados por responsável.</div>', unsafe_allow_html=True)
-
-                fila_df = (
-                    df_ativos.groupby("responsavel").size().reset_index(name="Fila atual")
-                    if not df_ativos.empty
-                    else pd.DataFrame(columns=["responsavel", "Fila atual"])
-                )
-                concluidos_df = (
-                    df_finalizados.groupby("responsavel").size().reset_index(name="Finalizados")
-                    if not df_finalizados.empty
-                    else pd.DataFrame(columns=["responsavel", "Finalizados"])
-                )
-                produtividade = pd.merge(fila_df, concluidos_df, on="responsavel", how="outer").fillna(0)
-
-                if produtividade.empty:
-                    st.info("Ainda não há dados suficientes de responsáveis.")
-                else:
-                    produtividade["Fila atual"] = produtividade["Fila atual"].astype(int)
-                    produtividade["Finalizados"] = produtividade["Finalizados"].astype(int)
-                    produtividade = produtividade.rename(columns={"responsavel": "Responsável"})
-                    produtividade = produtividade.sort_values(["Fila atual", "Finalizados"], ascending=[False, False])
-                    st.dataframe(produtividade, use_container_width=True, hide_index=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            with recomendacoes_col:
-                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-title">Recomendações automáticas</div>', unsafe_allow_html=True)
-                st.markdown('<div class="insight-panel-subtitle">Ações sugeridas pelas regras de análise.</div>', unsafe_allow_html=True)
-
-                recomendacoes = []
-                if atrasados > 0:
-                    recomendacoes.append(("Priorizar chamados atrasados", f"Existem {atrasados} chamado(s) fora do SLA no filtro atual."))
-                if proximos > 0:
-                    recomendacoes.append(("Atuar nos protocolos próximos do vencimento", f"{proximos} chamado(s) vence(m) nas próximas 24 horas."))
-                if unidade_atencao != "Sem unidade":
-                    recomendacoes.append((f"Concentrar atenção na unidade {unidade_atencao}", "Ela obteve o maior índice de atenção no período analisado."))
-                if categoria_top != "Sem categoria":
-                    recomendacoes.append((f"Investigar recorrências de {categoria_top}", f"A categoria soma {qtd_categoria_top} ocorrência(s) no período."))
-                if qtd_maior_fila >= 5:
-                    recomendacoes.append((f"Revisar a carga de {responsavel_maior_fila}", f"O responsável possui {qtd_maior_fila} chamado(s) ativo(s)."))
-                if not recomendacoes:
-                    recomendacoes.append(("Manter o acompanhamento", "Não foram identificados alertas críticos no filtro atual."))
-
-                for indice, (titulo, detalhe) in enumerate(recomendacoes[:5], start=1):
+            for coluna, icone, classe, rotulo, principal, rodape in cards:
+                with coluna:
                     st.markdown(
                         f"""
-                        <div class="insight-recommendation">
-                            <div class="insight-recommendation-number">{indice}</div>
-                            <div class="insight-recommendation-text"><b>{titulo}</b>{detalhe}</div>
+                        <div class="insight-card">
+                            <div class="insight-card-icon {classe}">{icone}</div>
+                            <div class="insight-card-label">{esc(rotulo)}</div>
+                            <div class="insight-card-main">{esc(principal)}</div>
+                            <div class="insight-card-foot">{esc(rodape)}</div>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
 
+            st.write("")
+            esquerda, direita = st.columns(2, gap="large")
+
+            ranking_html = []
+            for posicao, (_, linha) in enumerate(ranking_unidades.head(6).iterrows(), start=1):
+                unidade_linha = str(linha["unidade"])
+                atual = int(linha["chamados"])
+                anterior = len(df_anterior[df_anterior["unidade"] == unidade_linha])
+
+                if anterior > 0:
+                    variacao = round(((atual - anterior) / anterior) * 100)
+                elif atual > 0:
+                    variacao = 100
+                else:
+                    variacao = 0
+
+                classe_delta = "insight-delta-up" if variacao > 0 else "insight-delta-down"
+                seta = "↑" if variacao > 0 else "↓"
+                categoria_principal = categoria_por_unidade.get(unidade_linha, "Geral")
+
+                ranking_html.append(
+                    f"""
+                    <div class="insight-rank-row">
+                        <div class="insight-rank-position">{posicao}º</div>
+                        <div>
+                            <div class="insight-rank-name">{esc(unidade_linha)}</div>
+                            <div class="insight-rank-meta">
+                                {int(linha['chamados'])} chamado(s) •
+                                {int(linha['atrasados'])} atrasado(s) •
+                                {esc(categoria_principal)}
+                            </div>
+                        </div>
+                        <div class="insight-rank-score">
+                            <strong>{int(linha['pontuacao'])}</strong>
+                            <span class="{classe_delta}">{seta} {abs(variacao)}%</span>
+                        </div>
+                    </div>
+                    """
+                )
+
+            criticas = int(
+                (
+                    (ranking_unidades["atrasados"] > 0) |
+                    (ranking_unidades["urgentes"] > 0)
+                ).sum()
+            )
+
+            with esquerda:
                 st.markdown(
                     f"""
-                    <div class="insight-attention">
-                        <div class="insight-attention-title">PRIORIDADE DO PERÍODO</div>
-                        <div class="insight-attention-main">{unidade_atencao}</div>
-                        <div style="color:#7c2d12;font-size:13px;line-height:1.5;">
-                            Tratar atrasos, chamados próximos do SLA e ocorrências de {categoria_top}.
+                    <div class="insight-proto-panel">
+                        <div class="insight-proto-head">
+                            <div>
+                                <div class="insight-proto-title">Unidades que precisam de atenção</div>
+                                <div class="insight-proto-subtitle">Ranking baseado em volume, atraso e urgência.</div>
+                            </div>
+                            <span class="insight-tag insight-tag-red">{criticas} crítica(s)</span>
+                        </div>
+                        <div class="insight-rank-list">
+                            {''.join(ranking_html) if ranking_html else '<div class="insight-proto-subtitle">Sem dados.</div>'}
                         </div>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-                st.markdown('</div>', unsafe_allow_html=True)
+
+            recorrentes_base = (
+                df_periodo.groupby("categoria")
+                .agg(
+                    ocorrencias=("categoria", "size"),
+                    unidades_afetadas=("unidade", "nunique"),
+                    atrasados=("sla", lambda serie: int((serie == "Atrasado").sum()))
+                )
+                .reset_index()
+                .sort_values(["ocorrencias", "atrasados"], ascending=False)
+                .head(6)
+            )
+
+            max_ocorrencias = max(int(recorrentes_base["ocorrencias"].max()), 1) if not recorrentes_base.empty else 1
+            problemas_html = []
+
+            for _, linha in recorrentes_base.iterrows():
+                categoria = str(linha["categoria"])
+                unidades_categoria = (
+                    df_periodo[df_periodo["categoria"] == categoria]["unidade"]
+                    .value_counts()
+                    .head(4)
+                    .index
+                    .tolist()
+                )
+                percentual = max(8, round((int(linha["ocorrencias"]) / max_ocorrencias) * 100))
+
+                problemas_html.append(
+                    f"""
+                    <div class="insight-problem-row">
+                        <div class="insight-problem-top">
+                            <div class="insight-problem-name">{esc(categoria)}</div>
+                            <div class="insight-problem-count">{int(linha['ocorrencias'])}</div>
+                        </div>
+                        <div class="insight-problem-meta">
+                            {esc(', '.join(unidades_categoria))} • {int(linha['atrasados'])} atrasado(s)
+                        </div>
+                        <div class="insight-progress">
+                            <div class="insight-progress-fill" style="width:{percentual}%"></div>
+                        </div>
+                    </div>
+                    """
+                )
+
+            with direita:
+                st.markdown(
+                    f"""
+                    <div class="insight-proto-panel">
+                        <div class="insight-proto-head">
+                            <div>
+                                <div class="insight-proto-title">Problemas recorrentes</div>
+                                <div class="insight-proto-subtitle">Ocorrências semelhantes identificadas no período.</div>
+                            </div>
+                            <span class="insight-tag insight-tag-orange">Atenção</span>
+                        </div>
+                        <div class="insight-problem-list">
+                            {''.join(problemas_html) if problemas_html else '<div class="insight-proto-subtitle">Sem dados.</div>'}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            sla_rows = []
+            for _, linha in df_proximos.head(12).iterrows():
+                tempo, classe_tempo = tempo_restante_html(linha["horas_restantes"])
+                sla_rows.append(
+                    f"""
+                    <tr>
+                        <td><b>{esc(linha.get('protocolo', ''))}</b></td>
+                        <td>{esc(linha.get('unidade', ''))}</td>
+                        <td>{esc(linha.get('setor', ''))}</td>
+                        <td>{esc(linha.get('categoria', ''))}</td>
+                        <td>{esc(linha.get('responsavel', ''))}</td>
+                        <td><span class="insight-status-pill">{esc(linha.get('prioridade', ''))}</span></td>
+                        <td class="{classe_tempo}">{esc(tempo)}</td>
+                    </tr>
+                    """
+                )
+
+            sla_conteudo = (
+                f"""
+                <div class="insight-table-wrap">
+                    <table class="insight-table">
+                        <thead>
+                            <tr>
+                                <th>Protocolo</th>
+                                <th>Unidade</th>
+                                <th>Setor</th>
+                                <th>Categoria</th>
+                                <th>Responsável</th>
+                                <th>Prioridade</th>
+                                <th>Tempo restante</th>
+                            </tr>
+                        </thead>
+                        <tbody>{''.join(sla_rows)}</tbody>
+                    </table>
+                </div>
+                """
+                if sla_rows
+                else '<div class="insight-tag insight-tag-green">Nenhum chamado vence nas próximas 24 horas.</div>'
+            )
+
+            st.markdown(
+                f"""
+                <div class="insight-proto-panel">
+                    <div class="insight-proto-head">
+                        <div>
+                            <div class="insight-proto-title">Risco de SLA</div>
+                            <div class="insight-proto-subtitle">
+                                Chamados que ainda não atrasaram, mas exigem atenção nas próximas 24 horas.
+                            </div>
+                        </div>
+                        <div>
+                            <span class="insight-tag insight-tag-red">Menos de 1h</span>
+                            <span class="insight-tag insight-tag-orange">1h a 4h</span>
+                        </div>
+                    </div>
+                    {sla_conteudo}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            produtividade_col, recomendacoes_col = st.columns([1.1, .9], gap="large")
+
+            fila_df = (
+                df_ativos.groupby("responsavel").size().reset_index(name="fila")
+                if not df_ativos.empty
+                else pd.DataFrame(columns=["responsavel", "fila"])
+            )
+            concluidos_df = (
+                df_finalizados.groupby("responsavel").size().reset_index(name="finalizados")
+                if not df_finalizados.empty
+                else pd.DataFrame(columns=["responsavel", "finalizados"])
+            )
+            produtividade = pd.merge(fila_df, concluidos_df, on="responsavel", how="outer").fillna(0)
+            produtividade_rows = []
+
+            if not produtividade.empty:
+                produtividade["fila"] = produtividade["fila"].astype(int)
+                produtividade["finalizados"] = produtividade["finalizados"].astype(int)
+                produtividade = produtividade.sort_values(["fila", "finalizados"], ascending=[False, False])
+
+                for _, linha in produtividade.head(10).iterrows():
+                    produtividade_rows.append(
+                        f"""
+                        <tr>
+                            <td><b>{esc(linha['responsavel'])}</b></td>
+                            <td>{int(linha['fila'])}</td>
+                            <td>{int(linha['finalizados'])}</td>
+                        </tr>
+                        """
+                    )
+
+            with produtividade_col:
+                produtividade_conteudo = (
+                    f"""
+                    <div class="insight-table-wrap">
+                        <table class="insight-table" style="min-width:440px">
+                            <thead>
+                                <tr>
+                                    <th>Responsável</th>
+                                    <th>Fila atual</th>
+                                    <th>Finalizados</th>
+                                </tr>
+                            </thead>
+                            <tbody>{''.join(produtividade_rows)}</tbody>
+                        </table>
+                    </div>
+                    """
+                    if produtividade_rows
+                    else '<div class="insight-proto-subtitle">Ainda não há dados suficientes de responsáveis.</div>'
+                )
+
+                st.markdown(
+                    f"""
+                    <div class="insight-proto-panel">
+                        <div class="insight-proto-head">
+                            <div>
+                                <div class="insight-proto-title">Produtividade da equipe</div>
+                                <div class="insight-proto-subtitle">Visão para identificar desempenho e sobrecarga.</div>
+                            </div>
+                            <span class="insight-tag insight-tag-green">{dentro_sla}% no SLA</span>
+                        </div>
+                        {produtividade_conteudo}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            recomendacoes = []
+            if atrasados > 0:
+                recomendacoes.append(("Priorizar chamados atrasados", f"Existem {atrasados} chamado(s) fora do SLA no filtro atual."))
+            if proximos > 0:
+                recomendacoes.append(("Atuar nos protocolos próximos do vencimento", f"{proximos} chamado(s) vence(m) nas próximas 24 horas."))
+            if unidade_atencao != "Sem unidade":
+                recomendacoes.append((f"Concentrar atenção na unidade {unidade_atencao}", "Ela obteve o maior índice de atenção no período analisado."))
+            if categoria_top != "Sem categoria":
+                recomendacoes.append((f"Investigar recorrências de {categoria_top}", f"A categoria soma {qtd_categoria_top} ocorrência(s) no período."))
+            if qtd_maior_fila >= 5:
+                recomendacoes.append((f"Revisar a carga de {responsavel_maior_fila}", f"O responsável possui {qtd_maior_fila} chamado(s) ativo(s)."))
+            if not recomendacoes:
+                recomendacoes.append(("Manter o acompanhamento", "Não foram identificados alertas críticos no filtro atual."))
+
+            recomendacoes_html = []
+            for indice, (titulo, detalhe) in enumerate(recomendacoes[:5], start=1):
+                recomendacoes_html.append(
+                    f"""
+                    <div class="insight-action">
+                        <div class="insight-action-number">{indice}</div>
+                        <div class="insight-action-text">
+                            <strong>{esc(titulo)}</strong>
+                            {esc(detalhe)}
+                        </div>
+                    </div>
+                    """
+                )
+
+            with recomendacoes_col:
+                st.markdown(
+                    f"""
+                    <div class="insight-proto-panel">
+                        <div class="insight-proto-head">
+                            <div>
+                                <div class="insight-proto-title">Recomendações automáticas</div>
+                                <div class="insight-proto-subtitle">Ações sugeridas a partir dos indicadores.</div>
+                            </div>
+                        </div>
+                        <div class="insight-actions-list">
+                            {''.join(recomendacoes_html)}
+                        </div>
+                        <div class="insight-priority-box">
+                            <div class="insight-priority-label">PRIORIDADE DO PERÍODO</div>
+                            <div class="insight-priority-main">{esc(unidade_atencao)}</div>
+                            <div class="insight-priority-text">
+                                Tratar atrasos, chamados próximos do SLA e ocorrências de {esc(categoria_top)}.
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
 
 
 # =========================
