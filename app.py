@@ -1860,6 +1860,20 @@ else:
 query_params = st.query_params
 modo_tv = query_params.get("tv", "0") == "1"
 
+# Tema da TV também pode ser definido pela URL:
+# ?tv=1&tema=dark ou ?tv=1&tema=azul
+tema_url = str(query_params.get("tema", "")).strip().lower()
+
+if "tema_tv_operacional" not in st.session_state:
+    st.session_state.tema_tv_operacional = (
+        "Dark" if tema_url in ["dark", "preto", "black"] else "Azul"
+    )
+
+if tema_url in ["dark", "preto", "black"]:
+    st.session_state.tema_tv_operacional = "Dark"
+elif tema_url in ["azul", "blue", "claro"]:
+    st.session_state.tema_tv_operacional = "Azul"
+
 if modo_tv and perfil_usuario in ["Administrador", "Diretoria", "TV"]:
     menu = "TV Operacional"
 else:
@@ -3659,18 +3673,78 @@ elif menu == "Atualizar Chamado":
 
 
 # =========================
-# TV OPERACIONAL V3
+# TV OPERACIONAL V4 — TEMA AZUL + DARK
 # =========================
 
 elif menu == "TV Operacional":
-    st_autorefresh(interval=30000, key="tv_refresh_v2")
+    st_autorefresh(interval=30000, key="tv_refresh_v4")
 
     df = carregar_chamados()
     df = aplicar_permissao_chamados(df, usuario)
 
+    # No acesso normal, o usuário escolhe o template.
+    # No modo TV (?tv=1), o tema pode vir pela URL: &tema=dark ou &tema=azul.
+    if not modo_tv:
+        titulo_col, tema_col = st.columns([3.5, 1])
+
+        with titulo_col:
+            st.markdown('<div class="main-title">📺 TV Operacional</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="main-subtitle">Escolha o modelo visual da tela de chamados.</div>',
+                unsafe_allow_html=True
+            )
+
+        with tema_col:
+            tema_tv = st.selectbox(
+                "Template da TV",
+                ["Azul", "Dark"],
+                index=0 if st.session_state.tema_tv_operacional == "Azul" else 1,
+                key="tema_tv_operacional_select"
+            )
+            st.session_state.tema_tv_operacional = tema_tv
+    else:
+        tema_tv = st.session_state.tema_tv_operacional
+
+    tema_dark = tema_tv == "Dark"
+
+    if tema_dark:
+        st.markdown("""
+        <style>
+        html, body, .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"] {
+            background:#000000 !important;
+            color:#ffffff !important;
+        }
+        [data-testid="stHeader"] {
+            background:#000000 !important;
+        }
+        .block-container {
+            background:#000000 !important;
+        }
+        .tv-bg {
+            background:#000000 !important;
+        }
+        .tv-header {
+            background:linear-gradient(90deg,#050505,#111318) !important;
+            border:1px solid #25272d !important;
+            box-shadow:0 20px 50px rgba(0,0,0,.60) !important;
+        }
+        .tv-card {
+            background:linear-gradient(180deg,#0a0b0e,#050608) !important;
+            border:1px solid #25272d !important;
+            box-shadow:0 16px 38px rgba(0,0,0,.50) !important;
+        }
+        [data-testid="stCaptionContainer"] p {
+            color:#a3a3a3 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
     st.markdown('<div class="tv-bg">', unsafe_allow_html=True)
 
     agora_tela = datetime.now().strftime("%d/%m/%Y %H:%M")
+    nome_template = "DARK" if tema_dark else "AZUL"
 
     st.markdown(
         f"""
@@ -3678,6 +3752,7 @@ elif menu == "TV Operacional":
             <div>
                 <div class="tv-live">● AO VIVO</div>
                 <div class="tv-title">CENTRAL DE CHAMADO TI</div>
+                <div style="font-size:12px;opacity:.72;margin-top:5px;">TEMPLATE {nome_template}</div>
             </div>
             <div style="font-size:22px;font-weight:900;">{agora_tela}</div>
         </div>
@@ -3687,6 +3762,7 @@ elif menu == "TV Operacional":
 
     if df.empty:
         st.info("Nenhum chamado encontrado.")
+
     else:
         df["criado_em"] = pd.to_datetime(df["criado_em"], errors="coerce", utc=True)
         df["sla"] = df.apply(calcular_sla, axis=1)
@@ -3698,51 +3774,151 @@ elif menu == "TV Operacional":
 
         c1, c2, c3, c4 = st.columns(4)
 
-        tvs = [
+        indicadores = [
             (c1, abertos, "ABERTOS", "#f97316"),
-            (c2, andamento, "EM ANDAMENTO", "#7c3aed"),
+            (c2, andamento, "EM ANDAMENTO", "#8b5cf6"),
             (c3, atrasados, "ATRASADOS (SLA)", "#ef4444"),
             (c4, finalizados, "FINALIZADOS", "#22c55e")
         ]
 
-        for col, num, label, cor in tvs:
-            with col:
+        for coluna, numero, rotulo, cor in indicadores:
+            with coluna:
                 st.markdown(
                     f"""
                     <div class="tv-card">
-                        <div class="tv-number" style="color:{cor};">{num}</div>
-                        <div class="tv-label">{label}</div>
+                        <div class="tv-number" style="color:{cor};">{numero}</div>
+                        <div class="tv-label">{rotulo}</div>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-        st.markdown('<div class="tv-table">', unsafe_allow_html=True)
-        st.markdown("### Últimos chamados")
-
         colunas_tv = [
-            "protocolo",
-            "unidade",
-            "setor",
-            "descricao",
-            "prioridade",
-            "status",
-            "sla",
-            "responsavel",
-            "criado_em"
+            "protocolo", "unidade", "setor", "descricao",
+            "prioridade", "status", "sla", "responsavel"
         ]
+        colunas_tv = [c for c in colunas_tv if c in df.columns]
+        tv_df = df[colunas_tv].head(10).copy()
 
-        colunas_existentes = [c for c in colunas_tv if c in df.columns]
-        tv_df = df[colunas_existentes].head(10).copy()
+        rotulos = {
+            "protocolo": "Protocolo",
+            "unidade": "Unidade",
+            "setor": "Setor",
+            "descricao": "Descrição",
+            "prioridade": "Prioridade",
+            "status": "Status",
+            "sla": "SLA",
+            "responsavel": "Responsável"
+        }
 
-        st.dataframe(
-            tv_df,
-            use_container_width=True,
-            hide_index=True
+        cabecalho = "".join(
+            f"<th>{html_lib.escape(rotulos.get(coluna, coluna.title()))}</th>"
+            for coluna in colunas_tv
         )
 
-        st.caption("Atualização automática a cada 30 segundos")
-        st.markdown('</div>', unsafe_allow_html=True)
+        linhas_html = []
+
+        for _, linha in tv_df.iterrows():
+            celulas = []
+
+            for coluna in colunas_tv:
+                valor = linha.get(coluna, "")
+                texto = "" if pd.isna(valor) else str(valor)
+
+                if coluna == "protocolo":
+                    conteudo = f"<strong>{html_lib.escape(texto)}</strong>"
+
+                elif coluna == "descricao":
+                    seguro = html_lib.escape(texto)
+                    conteudo = f'<span class="tv-desc" title="{seguro}">{seguro}</span>'
+
+                elif coluna in ["prioridade", "status"]:
+                    normalizado = texto.strip().lower()
+                    if normalizado in ["urgente", "cancelado"]:
+                        classe = "chip-red"
+                    elif normalizado in ["alta", "aberto"]:
+                        classe = "chip-orange"
+                    elif normalizado in ["média", "media", "em andamento"]:
+                        classe = "chip-purple"
+                    else:
+                        classe = "chip-green"
+                    conteudo = f'<span class="tv-chip {classe}">{html_lib.escape(texto)}</span>'
+
+                elif coluna == "sla":
+                    classe = "sla-red" if texto == "Atrasado" else "sla-green"
+                    conteudo = f'<span class="{classe}">{html_lib.escape(texto)}</span>'
+
+                else:
+                    conteudo = html_lib.escape(texto)
+
+                celulas.append(f"<td>{conteudo}</td>")
+
+            linhas_html.append(f"<tr>{''.join(celulas)}</tr>")
+
+        fundo_tabela = "#07090d" if tema_dark else "#0b1f3a"
+        borda_tabela = "#25272d" if tema_dark else "rgba(255,255,255,.08)"
+        sombra_tabela = "0 20px 50px rgba(0,0,0,.55)" if tema_dark else "none"
+
+        tabela_html = f"""
+        <style>
+        .tv-table-html {{
+            background:{fundo_tabela};
+            border:1px solid {borda_tabela};
+            border-radius:20px;
+            padding:18px;
+            margin-top:18px;
+            color:white;
+            box-shadow:{sombra_tabela};
+        }}
+        .tv-table-html-title {{
+            color:#ffffff;
+            font-size:24px;
+            font-weight:950;
+            margin-bottom:14px;
+        }}
+        .tv-table-wrap {{width:100%;overflow-x:auto;border-radius:14px;}}
+        .tv-table-grid {{width:100%;min-width:1100px;border-collapse:collapse;table-layout:fixed;}}
+        .tv-table-grid th,
+        .tv-table-grid td {{
+            padding:12px 11px;
+            border-bottom:1px solid rgba(255,255,255,.10);
+            text-align:left;
+            vertical-align:middle;
+            color:#e6edf7;
+            font-size:13px;
+        }}
+        .tv-table-grid th {{
+            background:rgba(255,255,255,.045);
+            color:#a9bdd3;
+            font-size:10px;
+            font-weight:950;
+            text-transform:uppercase;
+            letter-spacing:.45px;
+        }}
+        .tv-table-grid tr:last-child td {{border-bottom:0;}}
+        .tv-table-grid strong {{color:#ffffff;font-weight:950;}}
+        .tv-desc {{display:block;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
+        .tv-chip {{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:950;white-space:nowrap;}}
+        .chip-green {{background:#dcfce7;color:#166534;}}
+        .chip-purple {{background:#ede9fe;color:#5b21b6;}}
+        .chip-orange {{background:#ffedd5;color:#9a3412;}}
+        .chip-red {{background:#fee2e2;color:#991b1b;}}
+        .sla-red {{color:#ff6b6b;font-weight:950;}}
+        .sla-green {{color:#4ade80;font-weight:950;}}
+        </style>
+        <div class="tv-table-html">
+            <div class="tv-table-html-title">Últimos chamados</div>
+            <div class="tv-table-wrap">
+                <table class="tv-table-grid">
+                    <thead><tr>{cabecalho}</tr></thead>
+                    <tbody>{''.join(linhas_html)}</tbody>
+                </table>
+            </div>
+        </div>
+        """
+
+        renderizar_html_bloco(tabela_html)
+        st.caption(f"Atualização automática a cada 30 segundos • Template ativo: {tema_tv}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
