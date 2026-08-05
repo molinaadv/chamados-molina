@@ -13,7 +13,7 @@ import requests
 # =========================
 
 st.set_page_config(
-    page_title="V360 Chamados Molina - V4",
+    page_title="V360 LegalOne Molina",
     layout="wide",
     page_icon="⚖️",
     initial_sidebar_state="expanded"
@@ -27,6 +27,42 @@ BOT_NOTIFY_URL = st.secrets.get("BOT_NOTIFY_URL", "")
 BOT_API_SECRET = st.secrets.get("BOT_API_SECRET", "")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+# Unidades disponíveis no sistema de Chamados LegalOne.
+# "LegalOne" é mantida como opção por compatibilidade com cadastros antigos.
+UNIDADES_MOLINA = [
+    "LegalOne",
+    "Atrium",
+    "Autazes",
+    "Barreirinha",
+    "Boa Vista",
+    "Boa Vista do Ramos",
+    "Caapiranga",
+    "Cachoeirinha",
+    "Canutama",
+    "Careiro",
+    "Cidade Nova",
+    "Compensa",
+    "Cuiabá",
+    "Humaitá",
+    "Iranduba",
+    "Itacoatiara",
+    "Itapiranga",
+    "Lábrea",
+    "Manacapuru",
+    "Manaquiri",
+    "Maués",
+    "Novo Airão",
+    "Online",
+    "Parintins",
+    "Porto Velho - Unid 1",
+    "Porto Velho - Unid 2",
+    "Presidente Figueiredo",
+    "Rio Preto da Eva",
+    "São José",
+    "Urucurituba"
+]
 
 
 # =========================
@@ -586,10 +622,203 @@ div[data-testid="stMetric"] {
 </style>
 """, unsafe_allow_html=True)
 
+# Visual do menu em formato de botões + componentes do menu Insights
+st.markdown("""
+<style>
+/* Menu lateral em formato de botões */
+[data-testid="stSidebar"] div[role="radiogroup"] {
+    gap: 2px !important;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] > label {
+    width: 100% !important;
+    background: rgba(255,255,255,.08) !important;
+    border: 1px solid rgba(255,255,255,.04) !important;
+    border-radius: 12px !important;
+    padding: 11px 13px !important;
+    margin: 3px 0 !important;
+    transition: all .18s ease !important;
+    cursor: pointer !important;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+    background: rgba(37,99,235,.42) !important;
+    transform: translateX(2px);
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
+    background: #2563eb !important;
+    border-color: rgba(255,255,255,.20) !important;
+    box-shadow: 0 8px 18px rgba(2,8,23,.22) !important;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] > label > div:first-child {
+    display: none !important;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] > label p {
+    font-size: 14px !important;
+    font-weight: 850 !important;
+    margin: 0 !important;
+    color: white !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] > label {
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    opacity: .75;
+    margin: 4px 4px 8px 4px !important;
+}
+
+/* Insights */
+.insight-summary {
+    background: linear-gradient(135deg,#071a33,#0b3f8a);
+    border-radius: 24px;
+    padding: 24px 26px;
+    color: white !important;
+    box-shadow: 0 18px 40px rgba(7,26,51,.22);
+    margin: 16px 0 20px 0;
+}
+.insight-summary * { color: white !important; }
+.insight-summary-title {
+    font-size: 24px;
+    font-weight: 950;
+    margin-bottom: 10px;
+}
+.insight-summary-text {
+    color: #e8f0ff !important;
+    line-height: 1.65;
+    font-size: 15px;
+}
+.insight-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 12px 28px rgba(15,23,42,.08);
+    min-height: 152px;
+}
+.insight-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    margin-bottom:10px;
+}
+.insight-card-label {
+    color:#64748b;
+    font-size:13px;
+    font-weight:850;
+}
+.insight-card-main {
+    color:#0f172a;
+    font-size:24px;
+    font-weight:950;
+    margin-top:6px;
+}
+.insight-card-foot {
+    color:#64748b;
+    font-size:12px;
+    line-height:1.45;
+    margin-top:8px;
+}
+.insight-panel {
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:22px;
+    padding:20px;
+    box-shadow:0 12px 28px rgba(15,23,42,.07);
+    margin-bottom:18px;
+}
+.insight-panel-title {
+    color:#0f172a;
+    font-size:21px;
+    font-weight:950;
+    margin-bottom:4px;
+}
+.insight-panel-subtitle {
+    color:#64748b;
+    font-size:13px;
+    margin-bottom:15px;
+}
+.insight-attention {
+    border:1px solid #fed7aa;
+    background:linear-gradient(180deg,#fff7ed,#ffffff);
+    border-radius:18px;
+    padding:18px;
+}
+.insight-attention-title {
+    color:#9a3412;
+    font-size:13px;
+    font-weight:900;
+}
+.insight-attention-main {
+    color:#c2410c;
+    font-size:37px;
+    font-weight:950;
+    margin:7px 0;
+}
+.insight-recommendation {
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    border:1px solid #e5e7eb;
+    background:#fbfcfe;
+    border-radius:15px;
+    padding:14px;
+    margin-bottom:10px;
+}
+.insight-recommendation-number {
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#dbeafe;
+    color:#1d4ed8;
+    font-weight:950;
+}
+.insight-recommendation-text {
+    color:#334155;
+    font-size:13px;
+    line-height:1.45;
+}
+.insight-recommendation-text b {
+    color:#0f172a;
+    display:block;
+    margin-bottom:3px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # =========================
 # FUNÇÕES BASE
 # =========================
+
+def opcoes_unidade(unidade_atual=None):
+    """Retorna as unidades válidas sem perder valores antigos já cadastrados."""
+    opcoes = list(UNIDADES_MOLINA)
+
+    if unidade_atual is not None and not pd.isna(unidade_atual):
+        unidade_atual = str(unidade_atual).strip()
+        if unidade_atual and unidade_atual not in opcoes:
+            opcoes.append(unidade_atual)
+
+    return opcoes
+
+
+def indice_unidade(opcoes, unidade_atual=None):
+    unidade_atual = str(unidade_atual or "LegalOne").strip() or "LegalOne"
+    return opcoes.index(unidade_atual) if unidade_atual in opcoes else 0
+
 
 def gerar_hash_senha(senha):
     return bcrypt.hashpw(
@@ -608,10 +837,9 @@ def verificar_senha(senha_digitada, senha_salva):
 
 
 def fazer_login(email, senha):
-    response = supabase.table("usuarios_sistema") \
+    response = supabase.table("usuarios_legalone") \
         .select("*") \
         .eq("email", email) \
-        .eq("ativo", True) \
         .execute()
 
     if response.data:
@@ -625,20 +853,35 @@ def fazer_login(email, senha):
 
 
 def enviar_google_chat(mensagem):
+    """
+    Envia uma mensagem simples para o espaço do Google Chat configurado
+    em GOOGLE_CHAT_WEBHOOK nos Secrets do Streamlit.
+    """
     if not GOOGLE_CHAT_WEBHOOK:
-        return
+        return False, "GOOGLE_CHAT_WEBHOOK não configurado."
 
     try:
-        requests.post(
+        resposta = requests.post(
             GOOGLE_CHAT_WEBHOOK,
             json={"text": mensagem},
             timeout=10
         )
+
+        if resposta.status_code in [200, 201]:
+            return True, "Mensagem enviada ao Google Chat."
+
+        return False, f"{resposta.status_code} - {resposta.text}"
+
     except Exception as e:
-        print(f"Erro Google Chat: {e}")
+        return False, str(e)
 
 
 def notificar_conclusao_bot(chamado, responsavel, observacao):
+    """
+    Aciona o bot do Google Chat para notificar o solicitante no chat direto.
+    Importante: o endpoint /notificar-conclusao do bot precisa usar email_solicitante
+    para localizar a conversa privada do usuário.
+    """
     if not BOT_NOTIFY_URL:
         return False, "BOT_NOTIFY_URL não configurado no Streamlit Secrets."
 
@@ -646,15 +889,27 @@ def notificar_conclusao_bot(chamado, responsavel, observacao):
         return False, "BOT_API_SECRET não configurado no Streamlit Secrets."
 
     try:
+        payload = {
+            "protocolo": chamado.get("protocolo", ""),
+            "status": "Finalizado",
+            "concluido_por": responsavel,
+            "responsavel": responsavel,
+            "observacao": observacao or "",
+            "solicitante": chamado.get("solicitante", ""),
+            "email_solicitante": chamado.get("email_solicitante", ""),
+            "unidade": chamado.get("unidade", ""),
+            "categoria": chamado.get("categoria", ""),
+            "descricao": chamado.get("descricao", ""),
+            "destino": "solicitante"
+        }
+
         resp = requests.post(
             BOT_NOTIFY_URL,
-            headers={"X-API-KEY": BOT_API_SECRET},
-            json={
-                "protocolo": chamado.get("protocolo", ""),
-                "concluido_por": responsavel,
-                "email_concluido_por": st.session_state.usuario.get("email", ""),
-                "observacao": observacao or ""
+            headers={
+                "Content-Type": "application/json",
+                "X-API-KEY": BOT_API_SECRET
             },
+            json=payload,
             timeout=30
         )
 
@@ -668,8 +923,9 @@ def notificar_conclusao_bot(chamado, responsavel, observacao):
 
 
 def carregar_chamados():
-    response = supabase.table("chamados") \
+    response = supabase.table("chamados_legalone") \
         .select("*") \
+        .eq("setor", "LegalOne") \
         .order("criado_em", desc=True) \
         .execute()
 
@@ -725,7 +981,7 @@ def calcular_sla(row):
 
 
 def criar_protocolo(chamado_id):
-    return f"CH-{chamado_id:05d}"
+    return f"LO-{chamado_id:05d}"
 
 
 def prioridade_badge(prioridade):
@@ -851,8 +1107,8 @@ if not st.session_state.logado:
 
     st.markdown("""
     <div class="login-page-header">
-        <div class="login-page-logo">⚖️ MOLINA</div>
-        <div class="login-page-subtitle">Sistema de Chamados • V360</div>
+        <div class="login-page-logo">⚖️ LEGALONE</div>
+        <div class="login-page-subtitle">Chamados Operacionais LegalOne • V360</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -890,7 +1146,7 @@ usuario = st.session_state.usuario
 # =========================
 
 with st.sidebar:
-    st.markdown('<div class="sidebar-logo">⚖️ MOLINA</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-logo">⚖️ LEGALONE</div>', unsafe_allow_html=True)
     st.markdown(
         f"""
         <div class="sidebar-user">
@@ -903,11 +1159,22 @@ with st.sidebar:
 
 perfil_usuario = usuario["perfil"]
 
+MENU_LABELS = {
+    "Painel Geral": "🔴 Painel Geral",
+    "Insights": "💡 Insights",
+    "TV Operacional": "⚪ TV Operacional",
+    "Atualizar Chamado": "⚪ Atualizar Chamado",
+    "Abrir Chamado": "⚪ Abrir Chamado",
+    "Relatórios": "⚪ Relatórios",
+    "Gerenciar Usuários": "⚪ Gerenciar Usuários"
+}
+
 if perfil_usuario == "TV":
     opcoes_menu = ["TV Operacional"]
 elif perfil_usuario == "Administrador":
     opcoes_menu = [
         "Painel Geral",
+        "Insights",
         "TV Operacional",
         "Atualizar Chamado",
         "Abrir Chamado",
@@ -917,6 +1184,7 @@ elif perfil_usuario == "Administrador":
 elif perfil_usuario == "Gestor":
     opcoes_menu = [
         "Painel Geral",
+        "Insights",
         "Atualizar Chamado",
         "Abrir Chamado",
         "Relatórios"
@@ -936,7 +1204,11 @@ if modo_tv and perfil_usuario in ["Administrador", "Diretoria", "TV"]:
     menu = "TV Operacional"
 else:
     with st.sidebar:
-        menu = st.radio("Menu", opcoes_menu)
+        menu = st.radio(
+            "Menu",
+            opcoes_menu,
+            format_func=lambda opcao: MENU_LABELS.get(opcao, opcao)
+        )
         st.divider()
         if st.button("🚪 Sair", use_container_width=True):
             st.session_state.logado = False
@@ -1191,8 +1463,8 @@ if modo_tv:
 # =========================
 
 if menu == "Abrir Chamado":
-    st.markdown('<div class="main-title">➕ Abrir Chamado</div>', unsafe_allow_html=True)
-    st.markdown('<div class="main-subtitle">Registre uma nova solicitação no sistema.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">➕ Abrir Chamado LegalOne</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-subtitle">Registre uma nova solicitação operacional do LegalOne.</div>', unsafe_allow_html=True)
 
     with st.container():
         st.markdown('<div class="detail-card">', unsafe_allow_html=True)
@@ -1211,28 +1483,40 @@ if menu == "Abrir Chamado":
                     value=usuario["email"]
                 )
 
-                unidade = st.text_input(
+                unidade_atual = usuario.get("unidade") or "LegalOne"
+                unidades_abertura = opcoes_unidade(unidade_atual)
+                unidade = st.selectbox(
                     "Unidade",
-                    value=usuario.get("unidade") or ""
+                    unidades_abertura,
+                    index=indice_unidade(unidades_abertura, unidade_atual)
                 )
 
             with col2:
                 setor = st.selectbox(
                     "Setor responsável",
-                    [
-                        "TI",
-                        "RH",
-                        "Financeiro",
-                        "Jurídico",
-                        "Atendimento",
-                        "Protocolo",
-                        "Marketing",
-                        "Estrutura",
-                        "Diretoria"
-                    ]
+                    ["LegalOne"],
+                    disabled=True
                 )
 
-                categoria = st.text_input("Categoria")
+                categoria = st.selectbox(
+                    "Categoria",
+                    [
+                        "Prazo",
+                        "Processo",
+                        "Andamento",
+                        "Tarefa",
+                        "Documento",
+                        "GED",
+                        "Acesso",
+                        "Relatório",
+                        "Mesa de Trabalho",
+                        "Sincronização",
+                        "Cadastro",
+                        "Contrato",
+                        "Lentidão",
+                        "Erro Geral"
+                    ]
+                )
 
                 prioridade = st.selectbox(
                     "Prioridade",
@@ -1251,7 +1535,7 @@ if menu == "Abrir Chamado":
                         "solicitante": solicitante,
                         "email_solicitante": email_solicitante,
                         "unidade": unidade,
-                        "setor": setor,
+                        "setor": "LegalOne",
                         "categoria": categoria,
                         "prioridade": prioridade,
                         "descricao": descricao,
@@ -1259,26 +1543,31 @@ if menu == "Abrir Chamado":
                         "criado_em": datetime.now(timezone.utc).isoformat()
                     }
 
-                    result = supabase.table("chamados").insert(dados).execute()
+                    result = supabase.table("chamados_legalone").insert(dados).execute()
                     chamado_id = result.data[0]["id"]
                     protocolo = criar_protocolo(chamado_id)
 
-                    supabase.table("chamados") \
+                    supabase.table("chamados_legalone") \
                         .update({"protocolo": protocolo}) \
                         .eq("id", chamado_id) \
                         .execute()
 
-                    st.success(f"Chamado criado com sucesso! {protocolo}")
+                    st.success(f"Chamado LegalOne criado com sucesso! {protocolo}")
 
-                    enviar_google_chat(
-                        f"🚨 *Novo chamado aberto*\n\n"
+                    ok_chat, detalhe_chat = enviar_google_chat(
+                        f"🚨 *Novo chamado LegalOne aberto*\n\n"
                         f"Protocolo: {protocolo}\n"
                         f"Solicitante: {solicitante}\n"
                         f"Unidade: {unidade}\n"
-                        f"Setor: {setor}\n"
+                        f"Setor: LegalOne\n"
+                        f"Categoria: {categoria}\n"
                         f"Prioridade: {prioridade}\n"
                         f"Descrição: {descricao}"
                     )
+
+                    if not ok_chat:
+                        st.warning("Chamado criado, mas não foi possível avisar no Google Chat.")
+                        st.code(detalhe_chat)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1292,7 +1581,7 @@ elif menu == "Painel Geral":
     df = aplicar_permissao_chamados(df, usuario)
 
     if df.empty:
-        st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
+        st.markdown('<div class="main-title">Painel Geral LegalOne</div>', unsafe_allow_html=True)
         st.info("Nenhum chamado encontrado.")
 
     else:
@@ -1322,8 +1611,8 @@ elif menu == "Painel Geral":
         topo1, topo2, topo3 = st.columns([1.8, 1, 1])
 
         with topo1:
-            st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
-            st.markdown('<div class="main-subtitle">Visão geral dos chamados do sistema.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="main-title">Painel Geral LegalOne</div>', unsafe_allow_html=True)
+            st.markdown('<div class="main-subtitle">Visão geral dos chamados operacionais LegalOne.</div>', unsafe_allow_html=True)
 
         with topo2:
             st.markdown(
@@ -1429,7 +1718,7 @@ elif menu == "Painel Geral":
 
                 with st.expander("📜 Histórico do chamado", expanded=False):
                     try:
-                        hist = supabase.table("historico_chamados") \
+                        hist = supabase.table("historico_chamados_legalone") \
                             .select("*") \
                             .eq("chamado_id", chamado_id) \
                             .order("criado_em", desc=True) \
@@ -1444,7 +1733,7 @@ elif menu == "Painel Geral":
                                 f"""
                                 <div class="timeline-item">
                                     <b>{formatar_data(h.get('criado_em',''))}</b><br>
-                                    {h.get('usuario','')} - {h.get('acao','')}<br>
+                                    {h.get('usuario','')} - Status: {h.get('status','')}<br>
                                     <small>{h.get('observacao','')}</small>
                                 </div>
                                 """,
@@ -1523,21 +1812,20 @@ elif menu == "Painel Geral":
                     if novo_status == "Finalizado":
                         dados_update["finalizado_em"] = datetime.now(timezone.utc).isoformat()
 
-                    supabase.table("chamados") \
+                    supabase.table("chamados_legalone") \
                         .update(dados_update) \
                         .eq("id", chamado_id) \
                         .execute()
 
-                    supabase.table("historico_chamados") \
-                        .insert({
-                            "chamado_id": chamado_id,
-                            "acao": f"Status alterado para {novo_status}",
-                            "usuario": responsavel or usuario["nome"],
-                            "observacao": observacoes
-                        }) \
-                        .execute()
+                    supabase.table("historico_chamados_legalone").insert({
+                        "chamado_id": chamado_id,
+                        "protocolo": chamado.get("protocolo", ""),
+                        "status": novo_status,
+                        "usuario": responsavel or usuario["nome"],
+                        "observacao": observacoes
+                    }).execute()
 
-                    st.success("Chamado atualizado.")
+                    st.success("Chamado LegalOne atualizado.")
 
                     if novo_status == "Finalizado":
                         ok, detalhe = notificar_conclusao_bot(
@@ -1552,13 +1840,17 @@ elif menu == "Painel Geral":
                             st.warning("Não foi possível notificar o solicitante.")
                             st.code(detalhe)
 
-                    enviar_google_chat(
+                    ok_chat, detalhe_chat = enviar_google_chat(
                         f"✅ *Chamado atualizado*\n\n"
                         f"Protocolo: {chamado.get('protocolo', '')}\n"
                         f"Novo status: {novo_status}\n"
                         f"Responsável: {responsavel}\n"
                         f"Observação: {observacoes}"
                     )
+
+                    if not ok_chat:
+                        st.warning("Chamado atualizado, mas não foi possível avisar no Google Chat.")
+                        st.code(detalhe_chat)
 
         st.divider()
         st.markdown('<div class="section-title">📊 Gráficos e indicadores</div>', unsafe_allow_html=True)
@@ -1598,9 +1890,9 @@ elif menu == "Painel Geral":
             st.plotly_chart(fig_prioridade, use_container_width=True)
 
         with g3:
-            st.markdown('<div class="section-title card-title-only">Chamados por Setor</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title card-title-only">Chamados por Categoria</div>', unsafe_allow_html=True)
             agrupado_df = (
-                df.groupby("setor")
+                df.groupby("categoria")
                 .size()
                 .reset_index(name="quantidade")
                 .sort_values("quantidade", ascending=True)
@@ -1609,7 +1901,7 @@ elif menu == "Painel Geral":
             fig_agrupado = px.bar(
                 agrupado_df,
                 x="quantidade",
-                y="setor",
+                y="categoria",
                 orientation="h",
                 text="quantidade"
             )
@@ -1624,7 +1916,7 @@ elif menu == "Painel Geral":
         tv_top1, tv_top2 = st.columns([2, 1])
 
         with tv_top1:
-            st.markdown('<div class="dark-tv-title">📺 TV OPERACIONAL - CHAMADOS AO VIVO <span class="live-badge">AO VIVO</span></div>', unsafe_allow_html=True)
+            st.markdown('<div class="dark-tv-title">📺 TV OPERACIONAL - LEGALONE AO VIVO <span class="live-badge">AO VIVO</span></div>', unsafe_allow_html=True)
 
         with tv_top2:
             st.markdown(
@@ -1698,6 +1990,552 @@ elif menu == "Painel Geral":
 
 
 # =========================
+# INSIGHTS LEGALONE
+# =========================
+
+elif menu == "Insights":
+    df = carregar_chamados()
+    df = aplicar_permissao_chamados(df, usuario)
+
+    topo_titulo, topo_periodo, topo_unidade = st.columns([1.8, .75, .9])
+
+    with topo_titulo:
+        st.markdown('<div class="main-title">💡 Insights LegalOne</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="main-subtitle">Leitura inteligente dos chamados para orientar decisões e prioridades.</div>',
+            unsafe_allow_html=True
+        )
+
+    with topo_periodo:
+        periodo_dias = st.selectbox(
+            "Período",
+            [7, 15, 30, 60, 90],
+            index=2,
+            format_func=lambda valor: f"Últimos {valor} dias",
+            key="insights_periodo"
+        )
+
+    if df.empty:
+        with topo_unidade:
+            st.selectbox("Unidade", ["Todas as unidades"], disabled=True)
+        st.info("Nenhum chamado encontrado para gerar insights.")
+
+    else:
+        # Garante as colunas necessárias mesmo em bases mais antigas.
+        colunas_padrao = {
+            "unidade": "Não informada",
+            "categoria": "Geral",
+            "responsavel": "Não atribuído",
+            "prioridade": "Média",
+            "status": "Aberto",
+            "descricao": ""
+        }
+
+        for coluna, valor_padrao in colunas_padrao.items():
+            if coluna not in df.columns:
+                df[coluna] = valor_padrao
+            df[coluna] = df[coluna].fillna(valor_padrao).astype(str)
+
+        df["criado_em"] = pd.to_datetime(df.get("criado_em"), errors="coerce", utc=True)
+
+        unidades_disponiveis = sorted(
+            [u for u in df["unidade"].dropna().unique().tolist() if str(u).strip()]
+        )
+
+        with topo_unidade:
+            unidade_selecionada = st.selectbox(
+                "Unidade",
+                ["Todas as unidades"] + unidades_disponiveis,
+                key="insights_unidade"
+            )
+
+        agora = datetime.now(timezone.utc)
+        inicio_periodo = agora - timedelta(days=periodo_dias)
+        inicio_periodo_anterior = inicio_periodo - timedelta(days=periodo_dias)
+
+        df_periodo = df[df["criado_em"] >= inicio_periodo].copy()
+        df_anterior = df[
+            (df["criado_em"] >= inicio_periodo_anterior) &
+            (df["criado_em"] < inicio_periodo)
+        ].copy()
+
+        if unidade_selecionada != "Todas as unidades":
+            df_periodo = df_periodo[df_periodo["unidade"] == unidade_selecionada].copy()
+            df_anterior = df_anterior[df_anterior["unidade"] == unidade_selecionada].copy()
+
+        if df_periodo.empty:
+            st.warning("Não há chamados no período e filtro selecionados.")
+
+        else:
+            df_periodo["sla"] = df_periodo.apply(calcular_sla, axis=1)
+
+            status_encerrados = ["Finalizado", "Cancelado"]
+            df_ativos = df_periodo[~df_periodo["status"].isin(status_encerrados)].copy()
+            df_finalizados = df_periodo[df_periodo["status"] == "Finalizado"].copy()
+
+            prazos_horas = {
+                "Urgente": 1,
+                "Alta": 4,
+                "Média": 24,
+                "Media": 24,
+                "Baixa": 72
+            }
+
+            if not df_ativos.empty:
+                df_ativos["horas_prazo"] = df_ativos["prioridade"].map(prazos_horas).fillna(24)
+                df_ativos["prazo_final"] = (
+                    df_ativos["criado_em"] +
+                    pd.to_timedelta(df_ativos["horas_prazo"], unit="h")
+                )
+                df_ativos["horas_restantes"] = (
+                    df_ativos["prazo_final"] - pd.Timestamp(agora)
+                ).dt.total_seconds() / 3600
+            else:
+                df_ativos["horas_restantes"] = pd.Series(dtype=float)
+
+            df_atrasados = df_ativos[df_ativos["horas_restantes"] < 0].copy()
+            df_proximos = df_ativos[
+                (df_ativos["horas_restantes"] >= 0) &
+                (df_ativos["horas_restantes"] <= 24)
+            ].sort_values("horas_restantes").copy()
+
+            total_periodo = len(df_periodo)
+            ativos = len(df_ativos)
+            atrasados = len(df_atrasados)
+            proximos = len(df_proximos)
+            dentro_sla = round(((ativos - atrasados) / ativos) * 100) if ativos else 100
+
+            contagem_categoria = (
+                df_periodo.groupby("categoria")
+                .size()
+                .sort_values(ascending=False)
+            )
+            categoria_top = contagem_categoria.index[0] if not contagem_categoria.empty else "Sem categoria"
+            qtd_categoria_top = int(contagem_categoria.iloc[0]) if not contagem_categoria.empty else 0
+
+            # Taxa simples de reincidência por concentração em categorias.
+            repeticoes = int(sum(max(int(qtd) - 1, 0) for qtd in contagem_categoria.tolist()))
+            taxa_reincidencia = round((repeticoes / total_periodo) * 100) if total_periodo else 0
+
+            # Ranking de unidades por volume + atraso + urgência.
+            base_unidades = df_periodo.copy()
+            base_unidades["atrasado_num"] = (base_unidades["sla"] == "Atrasado").astype(int)
+            base_unidades["urgente_num"] = (base_unidades["prioridade"] == "Urgente").astype(int)
+            base_unidades["ativo_num"] = (~base_unidades["status"].isin(status_encerrados)).astype(int)
+
+            ranking_unidades = (
+                base_unidades.groupby("unidade")
+                .agg(
+                    chamados=("unidade", "size"),
+                    ativos=("ativo_num", "sum"),
+                    atrasados=("atrasado_num", "sum"),
+                    urgentes=("urgente_num", "sum")
+                )
+                .reset_index()
+            )
+            ranking_unidades["pontuacao"] = (
+                ranking_unidades["chamados"] +
+                ranking_unidades["atrasados"] * 3 +
+                ranking_unidades["urgentes"] * 2
+            )
+            ranking_unidades = ranking_unidades.sort_values(
+                ["pontuacao", "atrasados", "chamados"],
+                ascending=False
+            )
+
+            unidade_atencao = (
+                ranking_unidades.iloc[0]["unidade"]
+                if not ranking_unidades.empty
+                else "Sem unidade"
+            )
+
+            dados_unidade_atencao = (
+                ranking_unidades.iloc[0]
+                if not ranking_unidades.empty
+                else None
+            )
+
+            # Crescimento da unidade de atenção comparado ao período anterior.
+            atual_unidade = len(df_periodo[df_periodo["unidade"] == unidade_atencao])
+            anterior_unidade = len(df_anterior[df_anterior["unidade"] == unidade_atencao])
+
+            if anterior_unidade > 0:
+                crescimento_unidade = round(
+                    ((atual_unidade - anterior_unidade) / anterior_unidade) * 100
+                )
+            elif atual_unidade > 0:
+                crescimento_unidade = 100
+            else:
+                crescimento_unidade = 0
+
+            fila_responsavel = (
+                df_ativos.groupby("responsavel")
+                .size()
+                .sort_values(ascending=False)
+            )
+            responsavel_maior_fila = (
+                fila_responsavel.index[0]
+                if not fila_responsavel.empty
+                else "Sem responsável"
+            )
+            qtd_maior_fila = (
+                int(fila_responsavel.iloc[0])
+                if not fila_responsavel.empty
+                else 0
+            )
+
+            resumo = (
+                f"A categoria <b>{categoria_top}</b> concentra a maior quantidade de chamados "
+                f"no período, com <b>{qtd_categoria_top}</b> ocorrência(s). "
+                f"A unidade <b>{unidade_atencao}</b> aparece como principal ponto de atenção. "
+                f"Existem <b>{atrasados} chamado(s) atrasado(s)</b> e "
+                f"<b>{proximos} próximo(s) do vencimento do SLA</b>. "
+                f"A prioridade recomendada é atuar primeiro nos chamados atrasados, "
+                f"nos protocolos próximos do prazo e nas ocorrências recorrentes de {categoria_top}."
+            )
+
+            st.markdown(
+                f"""
+                <div class="insight-summary">
+                    <div class="insight-summary-title">💡 Resumo inteligente do período</div>
+                    <div class="insight-summary-text">{resumo}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            k1, k2, k3, k4 = st.columns(4)
+
+            with k1:
+                atrasados_unidade = (
+                    int(dados_unidade_atencao["atrasados"])
+                    if dados_unidade_atencao is not None
+                    else 0
+                )
+                chamados_unidade = (
+                    int(dados_unidade_atencao["chamados"])
+                    if dados_unidade_atencao is not None
+                    else 0
+                )
+                st.markdown(
+                    f"""
+                    <div class="insight-card">
+                        <div class="insight-card-icon kpi-red">⚠️</div>
+                        <div class="insight-card-label">Unidade que exige atenção</div>
+                        <div class="insight-card-main">{unidade_atencao}</div>
+                        <div class="insight-card-foot">
+                            {chamados_unidade} chamado(s) • {atrasados_unidade} atrasado(s) •
+                            variação de {crescimento_unidade:+d}% contra o período anterior
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with k2:
+                st.markdown(
+                    f"""
+                    <div class="insight-card">
+                        <div class="insight-card-icon kpi-orange">🔁</div>
+                        <div class="insight-card-label">Problema mais recorrente</div>
+                        <div class="insight-card-main">{categoria_top}</div>
+                        <div class="insight-card-foot">
+                            {qtd_categoria_top} ocorrência(s) • reincidência estimada em {taxa_reincidencia}%
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with k3:
+                st.markdown(
+                    f"""
+                    <div class="insight-card">
+                        <div class="insight-card-icon kpi-purple">⏳</div>
+                        <div class="insight-card-label">Próximos de atrasar</div>
+                        <div class="insight-card-main">{proximos} chamado(s)</div>
+                        <div class="insight-card-foot">
+                            {len(df_proximos[df_proximos["horas_restantes"] <= 2]) if not df_proximos.empty else 0}
+                            vence(m) em até 2 horas
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with k4:
+                st.markdown(
+                    f"""
+                    <div class="insight-card">
+                        <div class="insight-card-icon kpi-blue">👥</div>
+                        <div class="insight-card-label">Responsável com maior fila</div>
+                        <div class="insight-card-main">{responsavel_maior_fila}</div>
+                        <div class="insight-card-foot">
+                            {qtd_maior_fila} chamado(s) ativo(s) • {dentro_sla}% da fila ainda dentro do SLA
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            st.write("")
+
+            esquerda, direita = st.columns(2, gap="large")
+
+            with esquerda:
+                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="insight-panel-title">Unidades que precisam de atenção</div>',
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    '<div class="insight-panel-subtitle">Ranking baseado em volume, atraso e urgência.</div>',
+                    unsafe_allow_html=True
+                )
+
+                ranking_exibir = ranking_unidades.head(8).copy()
+                ranking_exibir.insert(0, "posição", range(1, len(ranking_exibir) + 1))
+                ranking_exibir = ranking_exibir.rename(columns={
+                    "posição": "Posição",
+                    "unidade": "Unidade",
+                    "chamados": "Chamados",
+                    "ativos": "Ativos",
+                    "atrasados": "Atrasados",
+                    "urgentes": "Urgentes",
+                    "pontuacao": "Índice de atenção"
+                })
+                st.dataframe(
+                    ranking_exibir[
+                        ["Posição", "Unidade", "Chamados", "Ativos", "Atrasados", "Urgentes", "Índice de atenção"]
+                    ],
+                    use_container_width=True,
+                    hide_index=True
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with direita:
+                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="insight-panel-title">Problemas recorrentes</div>',
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    '<div class="insight-panel-subtitle">Categorias com maior concentração de chamados no período.</div>',
+                    unsafe_allow_html=True
+                )
+
+                recorrentes = (
+                    df_periodo.groupby("categoria")
+                    .agg(
+                        ocorrencias=("categoria", "size"),
+                        unidades_afetadas=("unidade", "nunique"),
+                        atrasados=("sla", lambda serie: int((serie == "Atrasado").sum()))
+                    )
+                    .reset_index()
+                    .sort_values(["ocorrencias", "atrasados"], ascending=False)
+                    .head(8)
+                    .rename(columns={
+                        "categoria": "Categoria",
+                        "ocorrencias": "Ocorrências",
+                        "unidades_afetadas": "Unidades afetadas",
+                        "atrasados": "Atrasados"
+                    })
+                )
+                st.dataframe(
+                    recorrentes,
+                    use_container_width=True,
+                    hide_index=True
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="insight-panel-title">Risco de SLA</div>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                '<div class="insight-panel-subtitle">Chamados que ainda não atrasaram, mas exigem atenção nas próximas 24 horas.</div>',
+                unsafe_allow_html=True
+            )
+
+            if df_proximos.empty:
+                st.success("Nenhum chamado corre risco de vencer nas próximas 24 horas.")
+            else:
+                sla_exibir = df_proximos.copy()
+                sla_exibir["Tempo restante"] = sla_exibir["horas_restantes"].apply(
+                    lambda horas: (
+                        f"{int(horas)}h {int((horas - int(horas)) * 60):02d}min"
+                        if horas >= 1
+                        else f"{max(0, int(horas * 60))} min"
+                    )
+                )
+                colunas_sla = [
+                    "protocolo",
+                    "unidade",
+                    "categoria",
+                    "responsavel",
+                    "prioridade",
+                    "Tempo restante"
+                ]
+                colunas_sla = [c for c in colunas_sla if c in sla_exibir.columns]
+                sla_exibir = sla_exibir[colunas_sla].head(12).rename(columns={
+                    "protocolo": "Protocolo",
+                    "unidade": "Unidade",
+                    "categoria": "Categoria",
+                    "responsavel": "Responsável",
+                    "prioridade": "Prioridade"
+                })
+                st.dataframe(
+                    sla_exibir,
+                    use_container_width=True,
+                    hide_index=True
+                )
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            produtividade_col, recomendacoes_col = st.columns([1.1, .9], gap="large")
+
+            with produtividade_col:
+                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="insight-panel-title">Produtividade e carga da equipe</div>',
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    '<div class="insight-panel-subtitle">Chamados ativos e finalizados por responsável.</div>',
+                    unsafe_allow_html=True
+                )
+
+                fila_df = (
+                    df_ativos.groupby("responsavel")
+                    .size()
+                    .reset_index(name="Fila atual")
+                    if not df_ativos.empty
+                    else pd.DataFrame(columns=["responsavel", "Fila atual"])
+                )
+
+                concluidos_df = (
+                    df_finalizados.groupby("responsavel")
+                    .size()
+                    .reset_index(name="Finalizados")
+                    if not df_finalizados.empty
+                    else pd.DataFrame(columns=["responsavel", "Finalizados"])
+                )
+
+                produtividade = pd.merge(
+                    fila_df,
+                    concluidos_df,
+                    on="responsavel",
+                    how="outer"
+                ).fillna(0)
+
+                if produtividade.empty:
+                    st.info("Ainda não há dados suficientes de responsáveis.")
+                else:
+                    produtividade["Fila atual"] = produtividade["Fila atual"].astype(int)
+                    produtividade["Finalizados"] = produtividade["Finalizados"].astype(int)
+                    produtividade = produtividade.rename(columns={"responsavel": "Responsável"})
+                    produtividade = produtividade.sort_values(
+                        ["Fila atual", "Finalizados"],
+                        ascending=[False, False]
+                    )
+                    st.dataframe(
+                        produtividade,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with recomendacoes_col:
+                st.markdown('<div class="insight-panel">', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="insight-panel-title">Recomendações automáticas</div>',
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    '<div class="insight-panel-subtitle">Ações sugeridas pelas regras de análise.</div>',
+                    unsafe_allow_html=True
+                )
+
+                recomendacoes = []
+
+                if atrasados > 0:
+                    recomendacoes.append(
+                        (
+                            "Priorizar chamados atrasados",
+                            f"Existem {atrasados} chamado(s) fora do SLA no filtro atual."
+                        )
+                    )
+
+                if proximos > 0:
+                    recomendacoes.append(
+                        (
+                            "Atuar nos protocolos próximos do vencimento",
+                            f"{proximos} chamado(s) vence(m) nas próximas 24 horas."
+                        )
+                    )
+
+                if unidade_atencao != "Sem unidade":
+                    recomendacoes.append(
+                        (
+                            f"Concentrar atenção na unidade {unidade_atencao}",
+                            f"Ela obteve o maior índice de atenção no período analisado."
+                        )
+                    )
+
+                if categoria_top != "Sem categoria":
+                    recomendacoes.append(
+                        (
+                            f"Investigar recorrências de {categoria_top}",
+                            f"A categoria soma {qtd_categoria_top} ocorrência(s) no período."
+                        )
+                    )
+
+                if qtd_maior_fila >= 5:
+                    recomendacoes.append(
+                        (
+                            f"Revisar a carga de {responsavel_maior_fila}",
+                            f"O responsável possui {qtd_maior_fila} chamado(s) ativo(s)."
+                        )
+                    )
+
+                if not recomendacoes:
+                    recomendacoes.append(
+                        (
+                            "Manter o acompanhamento",
+                            "Não foram identificados alertas críticos no filtro atual."
+                        )
+                    )
+
+                for indice, (titulo, detalhe) in enumerate(recomendacoes[:5], start=1):
+                    st.markdown(
+                        f"""
+                        <div class="insight-recommendation">
+                            <div class="insight-recommendation-number">{indice}</div>
+                            <div class="insight-recommendation-text">
+                                <b>{titulo}</b>
+                                {detalhe}
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                st.markdown(
+                    f"""
+                    <div class="insight-attention">
+                        <div class="insight-attention-title">PRIORIDADE DO PERÍODO</div>
+                        <div class="insight-attention-main">{unidade_atencao}</div>
+                        <div style="color:#7c2d12;font-size:13px;line-height:1.5;">
+                            Tratar atrasos, chamados próximos do SLA e ocorrências de {categoria_top}.
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
+
+
+# =========================
 # ATUALIZAR CHAMADO V4
 # =========================
 
@@ -1705,7 +2543,7 @@ elif menu == "Atualizar Chamado":
     st.markdown('<div class="main-title">Atualizar Chamado</div>', unsafe_allow_html=True)
     st.markdown('<div class="main-subtitle">Gerencie e atualize os chamados do sistema.</div>', unsafe_allow_html=True)
 
-    busca = st.text_input("🔎 Buscar chamado, protocolo, unidade ou descrição", placeholder="Ex.: CH-00182, Atrium, internet...")
+    busca = st.text_input("🔎 Buscar chamado, protocolo, unidade ou descrição", placeholder="Ex.: LO-00182, Cuiabá, prazo...")
 
     df = carregar_chamados()
     df = aplicar_permissao_chamados(df, usuario)
@@ -1825,21 +2663,22 @@ elif menu == "Atualizar Chamado":
                 if novo_status == "Finalizado":
                     dados_update["finalizado_em"] = datetime.now(timezone.utc).isoformat()
 
-                supabase.table("chamados") \
+                supabase.table("chamados_legalone") \
                     .update(dados_update) \
                     .eq("id", int(chamado["id"])) \
                     .execute()
 
-                supabase.table("historico_chamados") \
+                supabase.table("historico_chamados_legalone") \
                     .insert({
                         "chamado_id": int(chamado["id"]),
-                        "acao": f"Status alterado para {novo_status}",
+                        "protocolo": chamado["protocolo"],
+                        "status": novo_status,
                         "usuario": responsavel or usuario["nome"],
                         "observacao": observacoes
                     }) \
                     .execute()
 
-                st.success("Chamado atualizado.")
+                st.success("Chamado LegalOne atualizado.")
 
                 if novo_status == "Finalizado":
                     ok, detalhe = notificar_conclusao_bot(
@@ -1854,7 +2693,7 @@ elif menu == "Atualizar Chamado":
                         st.warning("Chamado finalizado, mas o bot não conseguiu notificar o solicitante.")
                         st.code(detalhe)
 
-                enviar_google_chat(
+                ok_chat, detalhe_chat = enviar_google_chat(
                     f"✅ *Chamado atualizado*\n\n"
                     f"Protocolo: {chamado.get('protocolo', '')}\n"
                     f"Novo status: {novo_status}\n"
@@ -1862,10 +2701,16 @@ elif menu == "Atualizar Chamado":
                     f"Observação: {observacoes}"
                 )
 
+                if ok_chat:
+                    st.success("Aviso enviado ao Google Chat.")
+                else:
+                    st.warning("Chamado atualizado, mas não foi possível avisar no Google Chat.")
+                    st.code(detalhe_chat)
+
             st.markdown('<div class="section-title">Histórico do Chamado</div>', unsafe_allow_html=True)
 
             try:
-                hist = supabase.table("historico_chamados") \
+                hist = supabase.table("historico_chamados_legalone") \
                     .select("*") \
                     .eq("chamado_id", int(chamado["id"])) \
                     .order("criado_em", desc=True) \
@@ -1877,7 +2722,7 @@ elif menu == "Atualizar Chamado":
                         f"""
                         <div class="timeline-item">
                             <b>{formatar_data(h.get('criado_em',''))}</b><br>
-                            {h.get('usuario','')} - {h.get('acao','')}<br>
+                            {h.get('usuario','')} - Status: {h.get('status','')}<br>
                             <small>{h.get('observacao','')}</small>
                         </div>
                         """,
@@ -1917,7 +2762,7 @@ elif menu == "TV Operacional":
         <div class="tv-header">
             <div>
                 <div class="tv-live">● AO VIVO</div>
-                <div class="tv-title">CENTRAL DE CHAMADO TI</div>
+                <div class="tv-title">TV OPERACIONAL - V360 LEGALONE</div>
             </div>
             <div style="font-size:22px;font-weight:900;">{agora_tela}</div>
         </div>
@@ -2077,86 +2922,194 @@ elif menu == "Gerenciar Usuários":
         st.error("Acesso negado.")
         st.stop()
 
-    col_form, col_lista = st.columns([1, 1.4])
+    aba1, aba2 = st.tabs(["➕ Cadastrar usuário", "✏️ Editar usuário existente"])
 
-    with col_form:
-        st.markdown('<div class="detail-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Novo usuário</div>', unsafe_allow_html=True)
+    with aba1:
+        col_form, col_lista = st.columns([1, 1.4])
 
-        with st.form("form_usuario"):
-            nome = st.text_input("Nome")
-            email = st.text_input("E-mail")
-            senha = st.text_input("Senha", type="password")
+        with col_form:
+            st.markdown('<div class="detail-card">', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Novo usuário</div>', unsafe_allow_html=True)
 
-            perfil = st.selectbox(
-                "Perfil",
-                ["Colaborador", "Gestor", "Diretoria", "Administrador", "TV"]
-            )
+            with st.form("form_usuario"):
+                nome = st.text_input("Nome")
+                email = st.text_input("E-mail")
+                senha = st.text_input("Senha", type="password")
 
-            setor = st.selectbox(
-                "Setor",
-                [
-                    "TI",
-                    "RH",
-                    "Financeiro",
-                    "Jurídico",
-                    "Atendimento",
-                    "Protocolo",
-                    "Marketing",
-                    "Estrutura",
-                    "Diretoria"
+                perfil = st.selectbox(
+                    "Perfil",
+                    ["Colaborador", "Gestor", "Diretoria", "Administrador", "TV"]
+                )
+
+                setor = st.selectbox(
+                    "Setor",
+                    ["LegalOne"]
+                )
+
+                unidades_novo_usuario = opcoes_unidade("LegalOne")
+                unidade = st.selectbox(
+                    "Unidade",
+                    unidades_novo_usuario,
+                    index=indice_unidade(unidades_novo_usuario, "LegalOne")
+                )
+
+                salvar_usuario = st.form_submit_button("Cadastrar usuário", use_container_width=True)
+
+                if salvar_usuario:
+                    if not nome or not email or not senha:
+                        st.error("Preencha nome, e-mail e senha.")
+                    else:
+                        dados_insert = {
+                            "nome": nome,
+                            "email": email,
+                            "senha": gerar_hash_senha(senha),
+                            "perfil": perfil,
+                            "setor": setor,
+                            "unidade": unidade
+                        }
+
+                        try:
+                            supabase.table("usuarios_legalone").insert(dados_insert).execute()
+                            st.success("Usuário cadastrado com sucesso.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error("Erro ao cadastrar usuário.")
+                            st.code(str(e))
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with col_lista:
+            st.markdown('<div class="detail-card">', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Usuários cadastrados</div>', unsafe_allow_html=True)
+
+            usuarios = supabase.table("usuarios_legalone") \
+                .select("*") \
+                .order("nome") \
+                .execute()
+
+            df_usuarios = pd.DataFrame(usuarios.data or [])
+
+            if df_usuarios.empty:
+                st.info("Nenhum usuário encontrado.")
+            else:
+                colunas_user = [
+                    "nome",
+                    "email",
+                    "perfil",
+                    "setor",
+                    "unidade",
+                    "criado_em"
                 ]
-            )
 
-            unidade = st.text_input("Unidade")
+                st.dataframe(
+                    df_usuarios[[c for c in colunas_user if c in df_usuarios.columns]],
+                    use_container_width=True,
+                    hide_index=True
+                )
 
-            salvar_usuario = st.form_submit_button("Cadastrar usuário", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-            if salvar_usuario:
-                if not nome or not email or not senha:
-                    st.error("Preencha nome, e-mail e senha.")
-                else:
-                    supabase.table("usuarios_sistema").insert({
-                        "nome": nome,
-                        "email": email,
-                        "senha": gerar_hash_senha(senha),
-                        "perfil": perfil,
-                        "setor": setor,
-                        "unidade": unidade,
-                        "ativo": True
-                    }).execute()
-
-                    st.success("Usuário cadastrado com sucesso.")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col_lista:
+    with aba2:
         st.markdown('<div class="detail-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Usuários cadastrados</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Editar usuário existente</div>', unsafe_allow_html=True)
 
-        usuarios = supabase.table("usuarios_sistema") \
+        usuarios = supabase.table("usuarios_legalone") \
             .select("*") \
             .order("nome") \
             .execute()
 
-        df_usuarios = pd.DataFrame(usuarios.data or [])
+        df_edit = pd.DataFrame(usuarios.data or [])
 
-        if df_usuarios.empty:
-            st.info("Nenhum usuário encontrado.")
+        if df_edit.empty:
+            st.info("Nenhum usuário encontrado para editar.")
         else:
-            colunas_user = [
-                "nome",
-                "email",
-                "perfil",
-                "setor",
-                "unidade",
-                "ativo",
-                "criado_em"
-            ]
-            st.dataframe(
-                df_usuarios[[c for c in colunas_user if c in df_usuarios.columns]],
-                use_container_width=True,
-                hide_index=True
+            df_edit["opcao"] = df_edit["nome"].fillna("") + " - " + df_edit["email"].fillna("")
+
+            usuario_opcao = st.selectbox(
+                "Selecione o usuário",
+                df_edit["opcao"].tolist()
             )
+
+            usuario_editado = df_edit[df_edit["opcao"] == usuario_opcao].iloc[0]
+
+            with st.form("form_editar_usuario_legalone"):
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    novo_nome = st.text_input(
+                        "Nome",
+                        value=usuario_editado.get("nome", "")
+                    )
+
+                    novo_email = st.text_input(
+                        "E-mail",
+                        value=usuario_editado.get("email", "")
+                    )
+
+                    nova_senha = st.text_input(
+                        "Nova senha",
+                        type="password",
+                        placeholder="Deixe em branco para manter a senha atual"
+                    )
+
+                with col2:
+                    perfis = ["Colaborador", "Gestor", "Diretoria", "Administrador", "TV"]
+                    perfil_atual = usuario_editado.get("perfil", "Colaborador")
+
+                    if perfil_atual not in perfis:
+                        perfil_atual = "Colaborador"
+
+                    novo_perfil = st.selectbox(
+                        "Perfil",
+                        perfis,
+                        index=perfis.index(perfil_atual)
+                    )
+
+                    setores = ["LegalOne"]
+                    setor_atual = usuario_editado.get("setor", "LegalOne")
+
+                    if setor_atual not in setores:
+                        setores.append(setor_atual)
+
+                    novo_setor = st.selectbox(
+                        "Setor",
+                        setores,
+                        index=setores.index(setor_atual)
+                    )
+
+                    unidade_atual_edicao = usuario_editado.get("unidade", "LegalOne")
+                    unidades_edicao = opcoes_unidade(unidade_atual_edicao)
+                    nova_unidade = st.selectbox(
+                        "Unidade",
+                        unidades_edicao,
+                        index=indice_unidade(unidades_edicao, unidade_atual_edicao)
+                    )
+
+                salvar_edicao = st.form_submit_button("💾 Salvar alterações", use_container_width=True)
+
+                if salvar_edicao:
+                    update = {
+                        "nome": novo_nome,
+                        "email": novo_email,
+                        "perfil": novo_perfil,
+                        "setor": novo_setor,
+                        "unidade": nova_unidade
+                    }
+
+                    if nova_senha:
+                        update["senha"] = gerar_hash_senha(nova_senha)
+
+                    try:
+                        supabase.table("usuarios_legalone") \
+                            .update(update) \
+                            .eq("id", int(usuario_editado["id"])) \
+                            .execute()
+
+                        st.success("Usuário atualizado com sucesso.")
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error("Erro ao atualizar usuário.")
+                        st.code(str(e))
 
         st.markdown('</div>', unsafe_allow_html=True)
