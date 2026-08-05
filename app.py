@@ -1028,6 +1028,20 @@ st.markdown("""
 # FUNÇÕES BASE
 # =========================
 
+
+def renderizar_html_bloco(conteudo):
+    """
+    Renderiza HTML gerado dinamicamente sem o Streamlit interpretar
+    linhas indentadas como blocos de código Markdown.
+    """
+    html_limpo = "\n".join(
+        linha.strip()
+        for linha in str(conteudo).splitlines()
+        if linha.strip()
+    )
+    st.markdown(html_limpo, unsafe_allow_html=True)
+
+
 def gerar_hash_senha(senha):
     return bcrypt.hashpw(
         senha.encode("utf-8"),
@@ -2374,7 +2388,7 @@ elif menu == "Insights":
                 f"nos protocolos próximos do prazo e nas ocorrências recorrentes."
             )
 
-            st.markdown(
+            renderizar_html_bloco(
                 f"""
                 <div class="insight-summary">
                     <div class="insight-summary-grid">
@@ -2402,8 +2416,7 @@ elif menu == "Insights":
                         </div>
                     </div>
                 </div>
-                """,
-                unsafe_allow_html=True
+                """
             )
 
             k1, k2, k3, k4 = st.columns(4)
@@ -2437,7 +2450,7 @@ elif menu == "Insights":
 
             for coluna, icone, classe, rotulo, principal, rodape in cards:
                 with coluna:
-                    st.markdown(
+                    renderizar_html_bloco(
                         f"""
                         <div class="insight-card">
                             <div class="insight-card-icon {classe}">{icone}</div>
@@ -2445,8 +2458,7 @@ elif menu == "Insights":
                             <div class="insight-card-main">{esc(principal)}</div>
                             <div class="insight-card-foot">{esc(rodape)}</div>
                         </div>
-                        """,
-                        unsafe_allow_html=True
+                        """
                     )
 
             st.write("")
@@ -2497,7 +2509,7 @@ elif menu == "Insights":
             )
 
             with esquerda:
-                st.markdown(
+                renderizar_html_bloco(
                     f"""
                     <div class="insight-proto-panel">
                         <div class="insight-proto-head">
@@ -2511,8 +2523,7 @@ elif menu == "Insights":
                             {''.join(ranking_html) if ranking_html else '<div class="insight-proto-subtitle">Sem dados.</div>'}
                         </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                    """
                 )
 
             recorrentes_base = (
@@ -2559,7 +2570,7 @@ elif menu == "Insights":
                 )
 
             with direita:
-                st.markdown(
+                renderizar_html_bloco(
                     f"""
                     <div class="insight-proto-panel">
                         <div class="insight-proto-head">
@@ -2573,8 +2584,7 @@ elif menu == "Insights":
                             {''.join(problemas_html) if problemas_html else '<div class="insight-proto-subtitle">Sem dados.</div>'}
                         </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                    """
                 )
 
             sla_rows = []
@@ -2617,7 +2627,7 @@ elif menu == "Insights":
                 else '<div class="insight-tag insight-tag-green">Nenhum chamado vence nas próximas 24 horas.</div>'
             )
 
-            st.markdown(
+            renderizar_html_bloco(
                 f"""
                 <div class="insight-proto-panel">
                     <div class="insight-proto-head">
@@ -2634,8 +2644,7 @@ elif menu == "Insights":
                     </div>
                     {sla_conteudo}
                 </div>
-                """,
-                unsafe_allow_html=True
+                """
             )
 
             produtividade_col, recomendacoes_col = st.columns([1.1, .9], gap="large")
@@ -2689,7 +2698,7 @@ elif menu == "Insights":
                     else '<div class="insight-proto-subtitle">Ainda não há dados suficientes de responsáveis.</div>'
                 )
 
-                st.markdown(
+                renderizar_html_bloco(
                     f"""
                     <div class="insight-proto-panel">
                         <div class="insight-proto-head">
@@ -2701,8 +2710,7 @@ elif menu == "Insights":
                         </div>
                         {produtividade_conteudo}
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                    """
                 )
 
             recomendacoes = []
@@ -2734,7 +2742,7 @@ elif menu == "Insights":
                 )
 
             with recomendacoes_col:
-                st.markdown(
+                renderizar_html_bloco(
                     f"""
                     <div class="insight-proto-panel">
                         <div class="insight-proto-head">
@@ -2754,8 +2762,7 @@ elif menu == "Insights":
                             </div>
                         </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                    """
                 )
 
 
