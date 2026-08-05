@@ -1024,6 +1024,114 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+
+# Ajustes da parte inferior do Insights para ficar igual ao protótipo.
+st.markdown("""
+<style>
+.insight-category-list {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+.insight-category-row {
+    border:1px solid #dfe7f2;
+    border-radius:16px;
+    padding:14px;
+    background:#ffffff;
+}
+.insight-category-top {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+}
+.insight-category-name {
+    color:#0f172a;
+    font-size:15px;
+    font-weight:950;
+}
+.insight-category-count {
+    color:#0f172a;
+    font-size:15px;
+    font-weight:950;
+}
+.insight-category-meta {
+    color:#6b7b91;
+    font-size:11px;
+    margin-top:6px;
+    line-height:1.4;
+}
+.insight-recommendations-grid {
+    display:grid;
+    grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr);
+    gap:20px;
+    align-items:stretch;
+}
+.insight-priority-box-large {
+    background:linear-gradient(180deg,#fff7ed,#ffffff);
+    border:1px solid #fdba74;
+    border-radius:18px;
+    padding:20px;
+    min-height:100%;
+}
+.insight-priority-title {
+    color:#7c2d12;
+    font-size:18px;
+    font-weight:950;
+}
+.insight-priority-main-large {
+    color:#c2410c;
+    font-size:40px;
+    font-weight:950;
+    margin:14px 0 10px;
+}
+.insight-priority-description {
+    color:#7c2d12;
+    font-size:13px;
+    line-height:1.55;
+}
+.insight-priority-button {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#2563eb;
+    color:#ffffff;
+    border-radius:12px;
+    padding:11px 15px;
+    margin-top:18px;
+    font-size:12px;
+    font-weight:950;
+}
+.insight-productivity-table {
+    width:100%;
+    border-collapse:collapse;
+}
+.insight-productivity-table th,
+.insight-productivity-table td {
+    padding:11px 10px;
+    border-bottom:1px solid #dfe7f2;
+    text-align:left;
+    color:#334155;
+    font-size:12px;
+}
+.insight-productivity-table th {
+    color:#506078;
+    text-transform:uppercase;
+    font-size:10px;
+    letter-spacing:.25px;
+}
+.insight-productivity-table tr:last-child td {
+    border-bottom:0;
+}
+@media (max-width: 1050px) {
+    .insight-recommendations-grid {
+        grid-template-columns:1fr;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # =========================
 # FUNÇÕES BASE
 # =========================
@@ -2647,52 +2755,205 @@ elif menu == "Insights":
                 """
             )
 
-            produtividade_col, recomendacoes_col = st.columns([1.1, .9], gap="large")
+            # =========================
+            # PRODUTIVIDADE DA EQUIPE
+            # =========================
 
             fila_df = (
                 df_ativos.groupby("responsavel").size().reset_index(name="fila")
                 if not df_ativos.empty
                 else pd.DataFrame(columns=["responsavel", "fila"])
             )
+
             concluidos_df = (
                 df_finalizados.groupby("responsavel").size().reset_index(name="finalizados")
                 if not df_finalizados.empty
                 else pd.DataFrame(columns=["responsavel", "finalizados"])
             )
-            produtividade = pd.merge(fila_df, concluidos_df, on="responsavel", how="outer").fillna(0)
+
+            produtividade = pd.merge(
+                fila_df,
+                concluidos_df,
+                on="responsavel",
+                how="outer"
+            ).fillna(0)
+
+            # Calcula tempo médio de resolução e percentual individual dentro do SLA.
+            metricas_finalizados = pd.DataFrame(
+                columns=["responsavel", "tempo_medio_horas", "percentual_sla"]
+            )
+
+            if not df_finalizados.empty and "finalizado_em" in df_finalizados.columns:
+                finalizados_metricas = df_finalizados.copy()
+                finalizados_metricas["finalizado_em_dt"] = pd.to_datetime(
+                    finalizados_metricas["finalizado_em"],
+                    errors="coerce",
+                    utc=True
+                )
+                finalizados_metricas["horas_resolucao"] = (
+                    finalizados_metricas["finalizado_em_dt"] -
+                    finalizados_metricas["criado_em"]
+                ).dt.total_seconds() / 3600
+
+                finalizados_metricas = finalizados_metricas[
+                    finalizados_metricas["horas_resolucao"].notna() &
+                    (finalizados_metricas["horas_resolucao"] >= 0)
+                ].copy()
+
+                if not finalizados_metricas.empty:
+                    finalizados_metricas["horas_prazo"] = (
+                        finalizados_metricas["prioridade"]
+                        .map(prazos_horas)
+                        .fillna(24)
+                    )
+                    finalizados_metricas["cumpriu_sla"] = (
+                        finalizados_metricas["horas_resolucao"] <=
+                        finalizados_metricas["horas_prazo"]
+                    )
+
+                    metricas_finalizados = (
+                        finalizados_metricas.groupby("responsavel")
+                        .agg(
+                            tempo_medio_horas=("horas_resolucao", "mean"),
+                            percentual_sla=("cumpriu_sla", "mean")
+                        )
+                        .reset_index()
+                    )
+                    metricas_finalizados["percentual_sla"] = (
+                        metricas_finalizados["percentual_sla"] * 100
+                    )
+
+            produtividade = pd.merge(
+                produtividade,
+                metricas_finalizados,
+                on="responsavel",
+                how="left"
+            )
+
             produtividade_rows = []
 
             if not produtividade.empty:
                 produtividade["fila"] = produtividade["fila"].astype(int)
                 produtividade["finalizados"] = produtividade["finalizados"].astype(int)
-                produtividade = produtividade.sort_values(["fila", "finalizados"], ascending=[False, False])
+                produtividade = produtividade.sort_values(
+                    ["fila", "finalizados"],
+                    ascending=[False, False]
+                )
 
                 for _, linha in produtividade.head(10).iterrows():
+                    tempo_medio = linha.get("tempo_medio_horas")
+                    percentual_individual = linha.get("percentual_sla")
+
+                    tempo_texto = (
+                        f"{tempo_medio:.0f}h"
+                        if pd.notna(tempo_medio)
+                        else "—"
+                    )
+                    sla_texto = (
+                        f"{percentual_individual:.0f}%"
+                        if pd.notna(percentual_individual)
+                        else "—"
+                    )
+
                     produtividade_rows.append(
                         f"""
                         <tr>
                             <td><b>{esc(linha['responsavel'])}</b></td>
                             <td>{int(linha['fila'])}</td>
                             <td>{int(linha['finalizados'])}</td>
+                            <td>{esc(tempo_texto)}</td>
+                            <td>{esc(sla_texto)}</td>
                         </tr>
                         """
                     )
 
+            # =========================
+            # ANÁLISE POR CATEGORIA
+            # =========================
+
+            categorias_atual = (
+                df_periodo.groupby("categoria")
+                .size()
+                .sort_values(ascending=False)
+            )
+
+            categorias_anterior = (
+                df_anterior.groupby("categoria")
+                .size()
+                if not df_anterior.empty
+                else pd.Series(dtype=int)
+            )
+
+            max_categoria = max(
+                int(categorias_atual.iloc[0]) if not categorias_atual.empty else 1,
+                1
+            )
+
+            categorias_html = []
+
+            for categoria, quantidade in categorias_atual.head(4).items():
+                quantidade = int(quantidade)
+                quantidade_anterior = int(categorias_anterior.get(categoria, 0))
+
+                if quantidade_anterior == 0 and quantidade > 0:
+                    tendencia = "aumentando"
+                elif quantidade > quantidade_anterior * 1.10:
+                    tendencia = "aumentando"
+                elif quantidade < quantidade_anterior * 0.90:
+                    tendencia = "reduzindo"
+                else:
+                    tendencia = "estável"
+
+                unidade_categoria = (
+                    df_periodo[df_periodo["categoria"] == categoria]["unidade"]
+                    .value_counts()
+                )
+                unidade_mais_afetada = (
+                    unidade_categoria.index[0]
+                    if not unidade_categoria.empty
+                    else "Não informada"
+                )
+
+                percentual_barra = max(
+                    8,
+                    round((quantidade / max_categoria) * 100)
+                )
+
+                categorias_html.append(
+                    f"""
+                    <div class="insight-category-row">
+                        <div class="insight-category-top">
+                            <div class="insight-category-name">{esc(categoria)}</div>
+                            <div class="insight-category-count">{quantidade}</div>
+                        </div>
+                        <div class="insight-category-meta">
+                            Unidade mais afetada: {esc(unidade_mais_afetada)} •
+                            tendência: {esc(tendencia)}
+                        </div>
+                        <div class="insight-progress">
+                            <div class="insight-progress-fill" style="width:{percentual_barra}%"></div>
+                        </div>
+                    </div>
+                    """
+                )
+
+            produtividade_col, categoria_col = st.columns(2, gap="large")
+
             with produtividade_col:
                 produtividade_conteudo = (
                     f"""
-                    <div class="insight-table-wrap">
-                        <table class="insight-table" style="min-width:440px">
-                            <thead>
-                                <tr>
-                                    <th>Responsável</th>
-                                    <th>Fila atual</th>
-                                    <th>Finalizados</th>
-                                </tr>
-                            </thead>
-                            <tbody>{''.join(produtividade_rows)}</tbody>
-                        </table>
-                    </div>
+                    <table class="insight-productivity-table">
+                        <thead>
+                            <tr>
+                                <th>Responsável</th>
+                                <th>Fila atual</th>
+                                <th>Finalizados</th>
+                                <th>Tempo médio</th>
+                                <th>No SLA</th>
+                            </tr>
+                        </thead>
+                        <tbody>{''.join(produtividade_rows)}</tbody>
+                    </table>
                     """
                     if produtividade_rows
                     else '<div class="insight-proto-subtitle">Ainda não há dados suficientes de responsáveis.</div>'
@@ -2704,7 +2965,9 @@ elif menu == "Insights":
                         <div class="insight-proto-head">
                             <div>
                                 <div class="insight-proto-title">Produtividade da equipe</div>
-                                <div class="insight-proto-subtitle">Visão para identificar desempenho e sobrecarga.</div>
+                                <div class="insight-proto-subtitle">
+                                    Visão para identificar desempenho e sobrecarga.
+                                </div>
                             </div>
                             <span class="insight-tag insight-tag-green">{dentro_sla}% no SLA</span>
                         </div>
@@ -2713,21 +2976,81 @@ elif menu == "Insights":
                     """
                 )
 
+            with categoria_col:
+                renderizar_html_bloco(
+                    f"""
+                    <div class="insight-proto-panel">
+                        <div class="insight-proto-head">
+                            <div>
+                                <div class="insight-proto-title">Análise por categoria</div>
+                                <div class="insight-proto-subtitle">
+                                    Categorias com maior impacto no período.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="insight-category-list">
+                            {''.join(categorias_html) if categorias_html else '<div class="insight-proto-subtitle">Sem dados de categorias.</div>'}
+                        </div>
+                    </div>
+                    """
+                )
+
+            # =========================
+            # RECOMENDAÇÕES AUTOMÁTICAS
+            # =========================
+
             recomendacoes = []
+
             if atrasados > 0:
-                recomendacoes.append(("Priorizar chamados atrasados", f"Existem {atrasados} chamado(s) fora do SLA no filtro atual."))
+                recomendacoes.append(
+                    (
+                        "Priorizar chamados atrasados",
+                        f"Existem {atrasados} chamado(s) fora do SLA no filtro atual."
+                    )
+                )
+
             if proximos > 0:
-                recomendacoes.append(("Atuar nos protocolos próximos do vencimento", f"{proximos} chamado(s) vence(m) nas próximas 24 horas."))
+                recomendacoes.append(
+                    (
+                        "Atuar nos chamados que vencem nas próximas horas",
+                        f"{proximos} chamado(s) vence(m) nas próximas 24 horas."
+                    )
+                )
+
             if unidade_atencao != "Sem unidade":
-                recomendacoes.append((f"Concentrar atenção na unidade {unidade_atencao}", "Ela obteve o maior índice de atenção no período analisado."))
+                recomendacoes.append(
+                    (
+                        f"Concentrar atenção na unidade {unidade_atencao}",
+                        "Ela obteve o maior índice de atenção no período analisado."
+                    )
+                )
+
             if categoria_top != "Sem categoria":
-                recomendacoes.append((f"Investigar recorrências de {categoria_top}", f"A categoria soma {qtd_categoria_top} ocorrência(s) no período."))
+                recomendacoes.append(
+                    (
+                        f"Investigar recorrências de {categoria_top}",
+                        f"A categoria soma {qtd_categoria_top} ocorrência(s) no período."
+                    )
+                )
+
             if qtd_maior_fila >= 5:
-                recomendacoes.append((f"Revisar a carga de {responsavel_maior_fila}", f"O responsável possui {qtd_maior_fila} chamado(s) ativo(s)."))
+                recomendacoes.append(
+                    (
+                        f"Redistribuir parte da fila de {responsavel_maior_fila}",
+                        f"O responsável possui {qtd_maior_fila} chamado(s) ativo(s)."
+                    )
+                )
+
             if not recomendacoes:
-                recomendacoes.append(("Manter o acompanhamento", "Não foram identificados alertas críticos no filtro atual."))
+                recomendacoes.append(
+                    (
+                        "Manter o acompanhamento",
+                        "Não foram identificados alertas críticos no filtro atual."
+                    )
+                )
 
             recomendacoes_html = []
+
             for indice, (titulo, detalhe) in enumerate(recomendacoes[:5], start=1):
                 recomendacoes_html.append(
                     f"""
@@ -2741,30 +3064,39 @@ elif menu == "Insights":
                     """
                 )
 
-            with recomendacoes_col:
-                renderizar_html_bloco(
-                    f"""
-                    <div class="insight-proto-panel">
-                        <div class="insight-proto-head">
-                            <div>
-                                <div class="insight-proto-title">Recomendações automáticas</div>
-                                <div class="insight-proto-subtitle">Ações sugeridas a partir dos indicadores.</div>
-                            </div>
-                        </div>
-                        <div class="insight-actions-list">
-                            {''.join(recomendacoes_html)}
-                        </div>
-                        <div class="insight-priority-box">
-                            <div class="insight-priority-label">PRIORIDADE DO PERÍODO</div>
-                            <div class="insight-priority-main">{esc(unidade_atencao)}</div>
-                            <div class="insight-priority-text">
-                                Tratar atrasos, chamados próximos do SLA e ocorrências de {esc(categoria_top)}.
+            renderizar_html_bloco(
+                f"""
+                <div class="insight-proto-panel">
+                    <div class="insight-proto-head">
+                        <div>
+                            <div class="insight-proto-title">Recomendações automáticas</div>
+                            <div class="insight-proto-subtitle">
+                                Ações sugeridas a partir dos indicadores desta página.
                             </div>
                         </div>
                     </div>
-                    """
-                )
 
+                    <div class="insight-recommendations-grid">
+                        <div class="insight-actions-list">
+                            {''.join(recomendacoes_html)}
+                        </div>
+
+                        <div class="insight-priority-box-large">
+                            <div class="insight-priority-title">Prioridade do período</div>
+                            <div class="insight-priority-main-large">{esc(unidade_atencao)}</div>
+                            <div class="insight-priority-description">
+                                Concentrar a equipe nos chamados atrasados, nos protocolos
+                                próximos do vencimento do SLA e nas ocorrências de
+                                {esc(categoria_top)}.
+                            </div>
+                            <div class="insight-priority-button">
+                                Ver chamados de {esc(unidade_atencao)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """
+            )
 
 
 # =========================
