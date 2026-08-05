@@ -1925,6 +1925,50 @@ else:
             st.rerun()
 
 
+
+# Correção do seletor "Tema visual" na sidebar para os dois temas.
+st.markdown("""
+<style>
+/* Mantém o seletor da sidebar legível também no tema Claro */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background:#0b1f3a !important;
+    border:1px solid rgba(255,255,255,.22) !important;
+    color:#ffffff !important;
+    border-radius:10px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] input,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] p {
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSelectbox"] svg {
+    fill:#ffffff !important;
+    color:#ffffff !important;
+}
+
+/* Menu suspenso do seletor */
+div[data-baseweb="popover"] [role="listbox"] {
+    background:#0b1f3a !important;
+    border:1px solid #284361 !important;
+}
+
+div[data-baseweb="popover"] [role="option"] {
+    background:#0b1f3a !important;
+    color:#ffffff !important;
+}
+
+div[data-baseweb="popover"] [role="option"]:hover,
+div[data-baseweb="popover"] [aria-selected="true"] {
+    background:#2563eb !important;
+    color:#ffffff !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # Aplica o tema Dark em todas as telas de uso do sistema.
 if st.session_state.tema_sistema == "Dark (azul escuro)":
     st.markdown(
