@@ -1306,7 +1306,6 @@ elif menu == "Painel Geral":
         urgentes = len(df[df["prioridade"] == "Urgente"])
         atrasados = len(df[df["sla"] == "Atrasado"])
 
-        # Finalizados do mês vigente
         agora_mes = datetime.now(timezone.utc)
         if "finalizado_em" in df.columns:
             df["finalizado_em"] = pd.to_datetime(df["finalizado_em"], errors="coerce", utc=True)
@@ -1320,223 +1319,93 @@ elif menu == "Painel Geral":
         else:
             finalizados_mes = finalizados
 
-        esquerda, direita = st.columns([2.35, 1.15], gap="large")
+        topo1, topo2, topo3 = st.columns([1.8, 1, 1])
 
-        with esquerda:
-            topo1, topo2, topo3 = st.columns([1.7, 1, 1])
+        with topo1:
+            st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
+            st.markdown('<div class="main-subtitle">Visão geral dos chamados do sistema.</div>', unsafe_allow_html=True)
 
-            with topo1:
-                st.markdown('<div class="main-title">Painel Geral</div>', unsafe_allow_html=True)
-                st.markdown('<div class="main-subtitle">Visão geral dos chamados do sistema.</div>', unsafe_allow_html=True)
+        with topo2:
+            st.markdown(
+                f"""
+                <div class="online-box">
+                    <span class="online-dot"></span>
+                    <b>Última atualização:</b><br>
+                    {datetime.now().strftime('%d/%m/%Y %H:%M')}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-            with topo2:
+        with topo3:
+            if st.button("🔄 Atualizar dados", use_container_width=True, key="painel_atualizar_dados"):
+                st.rerun()
+
+        k1, k2, k3, k4, k5 = st.columns(5)
+
+        kpis = [
+            (k1, "🟠", "Abertos", abertos, "- hoje", "kpi-orange"),
+            (k2, "🔍", "Em Andamento", andamento, "+ hoje", "kpi-purple"),
+            (k3, "⏱️", "Atrasados (SLA)", atrasados, "+ SLA", "kpi-red"),
+            (k4, "✅", "Finalizados do mês", finalizados_mes, "+ mês", "kpi-green"),
+            (k5, "📋", "Total de Chamados", total, "+ geral", "kpi-blue"),
+        ]
+
+        for col, icon, label, num, foot, classe in kpis:
+            with col:
                 st.markdown(
                     f"""
-                    <div class="online-box">
-                        <span class="online-dot"></span>
-                        <b>Última atualização:</b><br>
-                        {datetime.now().strftime('%d/%m/%Y %H:%M')}
+                    <div class="premium-kpi">
+                        <div class="premium-icon {classe}">{icon}</div>
+                        <div class="premium-label">{label}</div>
+                        <div class="premium-number">{num}</div>
+                        <div class="premium-foot">{foot}</div>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-            with topo3:
-                if st.button("🔄 Atualizar dados", use_container_width=True):
-                    st.rerun()
+        st.write("")
+        st.markdown('<div class="section-title">🛠️ Atualizar Chamado</div>', unsafe_allow_html=True)
+        st.caption("A função mais utilizada agora fica em destaque, logo abaixo dos indicadores.")
 
-            k1, k2, k3, k4, k5 = st.columns(5)
+        df_abertos = df[~df["status"].isin(["Finalizado", "Cancelado"])].copy()
+        busca = st.text_input(
+            "Buscar chamado",
+            placeholder="Protocolo, unidade, descrição...",
+            key="painel_busca_chamado"
+        )
 
-            kpis = [
-                (k1, "🟠", "Abertos", abertos, "- hoje", "kpi-orange"),
-                (k2, "🔍", "Em Andamento", andamento, "+ hoje", "kpi-purple"),
-                (k3, "⏱️", "Atrasados (SLA)", atrasados, "+ SLA", "kpi-red"),
-                (k4, "✅", "Finalizados do mês", finalizados_mes, "+ mês", "kpi-green"),
-                (k5, "📋", "Total de Chamados", total, "+ geral", "kpi-blue"),
+        if busca and not df_abertos.empty:
+            termo = busca.lower().strip()
+            df_abertos = df_abertos[
+                df_abertos.astype(str).apply(
+                    lambda linha: termo in " ".join(linha.values).lower(),
+                    axis=1
+                )
             ]
 
-            for col, icon, label, num, foot, classe in kpis:
-                with col:
-                    st.markdown(
-                        f"""
-                        <div class="premium-kpi">
-                            <div class="premium-icon {classe}">{icon}</div>
-                            <div class="premium-label">{label}</div>
-                            <div class="premium-number">{num}</div>
-                            <div class="premium-foot">{foot}</div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-            st.write("")
-
-            g1, g2, g3 = st.columns([1.05, 1.05, .95], gap="medium")
-
-            with g1:
-                st.markdown('<div class="section-title card-title-only">Chamados por Status</div>', unsafe_allow_html=True)
-                fig_status = px.pie(
-                    df,
-                    names="status",
-                    hole=0.58
-                )
-                fig_status.update_layout(
-                    height=310,
-                    margin=dict(t=5,b=5,l=5,r=5),
-                    legend=dict(orientation="v", y=.5)
-                )
-                st.plotly_chart(fig_status, use_container_width=True)
-
-            with g2:
-                st.markdown('<div class="section-title card-title-only">Chamados por Prioridade</div>', unsafe_allow_html=True)
-                prioridade_df = (
-                    df.groupby("prioridade")
-                    .size()
-                    .reset_index(name="quantidade")
-                    .sort_values("quantidade", ascending=False)
-                )
-                fig_prioridade = px.bar(
-                    prioridade_df,
-                    x="prioridade",
-                    y="quantidade",
-                    text="quantidade"
-                )
-                fig_prioridade.update_layout(
-                    height=310,
-                    margin=dict(t=5,b=5,l=5,r=5),
-                    showlegend=False
-                )
-                fig_prioridade.update_traces(textposition="outside")
-                st.plotly_chart(fig_prioridade, use_container_width=True)
-
-            with g3:
-                st.markdown('<div class="section-title card-title-only">Chamados por Setor</div>', unsafe_allow_html=True)
-                setor_df = (
-                    df.groupby("setor")
-                    .size()
-                    .reset_index(name="quantidade")
-                    .sort_values("quantidade", ascending=True)
-                    .tail(8)
-                )
-                fig_setor = px.bar(
-                    setor_df,
-                    x="quantidade",
-                    y="setor",
-                    orientation="h",
-                    text="quantidade"
-                )
-                fig_setor.update_layout(
-                    height=310,
-                    margin=dict(t=5,b=5,l=5,r=5),
-                    showlegend=False
-                )
-                st.plotly_chart(fig_setor, use_container_width=True)
-
-            st.markdown('<div class="dark-tv-box">', unsafe_allow_html=True)
-            tv_top1, tv_top2 = st.columns([2,1])
-            with tv_top1:
-                st.markdown('<div class="dark-tv-title">📺 TV OPERACIONAL - CHAMADOS AO VIVO <span class="live-badge">AO VIVO</span></div>', unsafe_allow_html=True)
-            with tv_top2:
-                st.markdown(f'<div class="dark-tv-time">{datetime.now().strftime("%d/%m/%Y %H:%M")}</div>', unsafe_allow_html=True)
-
-            if "filtro_tv_painel" not in st.session_state:
-                st.session_state.filtro_tv_painel = "Todos"
-
-            tabs1, tabs2, tabs3, tabs4, tabs5 = st.columns(5)
-
-            with tabs1:
-                if st.button(f"Todos  {total}", use_container_width=True, key="btn_tv_todos"):
-                    st.session_state.filtro_tv_painel = "Todos"
-
-            with tabs2:
-                if st.button(f"Abertos  {abertos}", use_container_width=True, key="btn_tv_abertos"):
-                    st.session_state.filtro_tv_painel = "Abertos"
-
-            with tabs3:
-                if st.button(f"Em andamento  {andamento}", use_container_width=True, key="btn_tv_andamento"):
-                    st.session_state.filtro_tv_painel = "Em andamento"
-
-            with tabs4:
-                if st.button(f"Atrasados  {atrasados}", use_container_width=True, key="btn_tv_atrasados"):
-                    st.session_state.filtro_tv_painel = "Atrasados"
-
-            with tabs5:
-                if st.button(f"Urgentes  {urgentes}", use_container_width=True, key="btn_tv_urgentes"):
-                    st.session_state.filtro_tv_painel = "Urgentes"
-
-            filtro_tv = st.session_state.filtro_tv_painel
-
-            if filtro_tv == "Abertos":
-                df_tv_painel = df[df["status"] == "Aberto"].copy()
-            elif filtro_tv == "Em andamento":
-                df_tv_painel = df[df["status"] == "Em andamento"].copy()
-            elif filtro_tv == "Atrasados":
-                df_tv_painel = df[df["sla"] == "Atrasado"].copy()
-            elif filtro_tv == "Urgentes":
-                df_tv_painel = df[df["prioridade"] == "Urgente"].copy()
-            else:
-                df_tv_painel = df.copy()
-
-            st.markdown(
-                f'<div class="filtro-ativo">Filtro ativo: <b>{filtro_tv}</b> • {len(df_tv_painel)} chamado(s)</div>',
-                unsafe_allow_html=True
+        if df_abertos.empty:
+            st.info("Nenhum chamado aberto encontrado para atualização.")
+        else:
+            df_abertos["opcao"] = (
+                df_abertos["protocolo"].fillna(df_abertos["id"].astype(str))
+                + " - "
+                + df_abertos["descricao"].fillna("").str[:70]
             )
 
-            colunas_recentes = [
-                "protocolo",
-                "unidade",
-                "setor",
-                "descricao",
-                "prioridade",
-                "status",
-                "sla",
-                "responsavel",
-                "criado_em"
-            ]
-            colunas_recentes = [c for c in colunas_recentes if c in df_tv_painel.columns]
-            recentes = df_tv_painel[colunas_recentes].head(12).copy()
-            if "criado_em" in recentes.columns:
-                recentes["criado_em"] = recentes["criado_em"].apply(formatar_data)
+            chamado_opcao = st.selectbox(
+                "Selecione um chamado aberto",
+                df_abertos["opcao"].tolist(),
+                key="painel_chamado_selecionado"
+            )
 
-            st.dataframe(recentes, use_container_width=True, hide_index=True)
-            st.caption("Atualização automática a cada 30 segundos")
-            st.markdown('</div>', unsafe_allow_html=True)
+            chamado = df_abertos[df_abertos["opcao"] == chamado_opcao].iloc[0]
+            chamado_id = int(chamado["id"])
 
-        with direita:
-            st.markdown('<div class="right-panel">', unsafe_allow_html=True)
-            st.markdown('<div class="right-title">Atualizar Chamado</div>', unsafe_allow_html=True)
-            st.markdown('<div class="right-subtitle">Gerencie e atualize os chamados do sistema</div>', unsafe_allow_html=True)
+            detalhe_col, edicao_col = st.columns([1.15, 1.35], gap="large")
 
-            df_abertos = df[~df["status"].isin(["Finalizado", "Cancelado"])].copy()
-
-            busca = st.text_input("Buscar chamado", placeholder="Protocolo, unidade, descrição...")
-
-            if busca and not df_abertos.empty:
-                termo = busca.lower().strip()
-                df_abertos = df_abertos[
-                    df_abertos.astype(str).apply(
-                        lambda linha: termo in " ".join(linha.values).lower(),
-                        axis=1
-                    )
-                ]
-
-            if df_abertos.empty:
-                st.info("Nenhum chamado aberto.")
-            else:
-                df_abertos["opcao"] = (
-                    df_abertos["protocolo"].fillna(df_abertos["id"].astype(str))
-                    + " - "
-                    + df_abertos["descricao"].fillna("").str[:38]
-                )
-
-                chamado_opcao = st.selectbox(
-                    "Chamados abertos",
-                    df_abertos["opcao"].tolist(),
-                    label_visibility="collapsed"
-                )
-
-                chamado = df_abertos[df_abertos["opcao"] == chamado_opcao].iloc[0]
-
+            with detalhe_col:
                 st.markdown(
                     f"""
                     <div class="selected-ticket">
@@ -1558,10 +1427,36 @@ elif menu == "Painel Geral":
                     unsafe_allow_html=True
                 )
 
-                novo_status = st.selectbox(
-                    "Atualizar Status",
-                    ["Aberto", "Em andamento", "Aguardando", "Finalizado", "Cancelado"]
-                )
+                with st.expander("📜 Histórico do chamado", expanded=False):
+                    try:
+                        hist = supabase.table("historico_chamados") \
+                            .select("*") \
+                            .eq("chamado_id", chamado_id) \
+                            .order("criado_em", desc=True) \
+                            .limit(6) \
+                            .execute()
+
+                        if not hist.data:
+                            st.caption("Nenhum histórico registrado.")
+
+                        for h in hist.data or []:
+                            st.markdown(
+                                f"""
+                                <div class="timeline-item">
+                                    <b>{formatar_data(h.get('criado_em',''))}</b><br>
+                                    {h.get('usuario','')} - {h.get('acao','')}<br>
+                                    <small>{h.get('observacao','')}</small>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
+                    except Exception:
+                        st.caption("Histórico indisponível.")
+
+            with edicao_col:
+                status_opcoes = ["Aberto", "Em andamento", "Aguardando", "Finalizado", "Cancelado"]
+                status_atual = chamado.get("status") or "Aberto"
+                status_index = status_opcoes.index(status_atual) if status_atual in status_opcoes else 0
 
                 responsaveis_opcoes = ["Paulo Balbi", "Icaro Bruce", "Alexandre Brito"]
                 responsavel_atual = chamado.get("responsavel")
@@ -1569,33 +1464,53 @@ elif menu == "Painel Geral":
                 if pd.isna(responsavel_atual) or not str(responsavel_atual).strip() or str(responsavel_atual).lower() == "nan":
                     responsavel_atual = usuario["nome"]
 
-                if responsavel_atual not in responsaveis_opcoes:
+                if str(responsavel_atual) not in responsaveis_opcoes:
                     responsaveis_opcoes.append(str(responsavel_atual))
 
-                responsavel = st.selectbox(
-                    "Responsável",
-                    responsaveis_opcoes,
-                    index=responsaveis_opcoes.index(responsavel_atual)
-                )
+                f1, f2 = st.columns(2)
+
+                with f1:
+                    novo_status = st.selectbox(
+                        "Atualizar Status",
+                        status_opcoes,
+                        index=status_index,
+                        key=f"painel_status_{chamado_id}"
+                    )
+
+                with f2:
+                    responsavel = st.selectbox(
+                        "Responsável",
+                        responsaveis_opcoes,
+                        index=responsaveis_opcoes.index(str(responsavel_atual)),
+                        key=f"painel_responsavel_{chamado_id}"
+                    )
 
                 observacao_atual = chamado.get("observacoes")
-
                 if pd.isna(observacao_atual) or str(observacao_atual).lower() == "nan":
                     observacao_atual = ""
 
                 observacoes = st.text_area(
                     "Observações",
                     value=observacao_atual,
-                    height=120
+                    height=150,
+                    key=f"painel_observacoes_{chamado_id}"
                 )
 
-                col_a, col_b = st.columns([1, 1.3])
+                col_a, col_b = st.columns([1, 1.35])
 
                 with col_a:
-                    salvar = st.button("💾 Salvar", use_container_width=True)
+                    salvar = st.button(
+                        "💾 Salvar",
+                        use_container_width=True,
+                        key=f"painel_salvar_{chamado_id}"
+                    )
 
                 with col_b:
-                    responder = st.button("💬 Responder Solicitante", use_container_width=True)
+                    responder = st.button(
+                        "💬 Responder Solicitante",
+                        use_container_width=True,
+                        key=f"painel_responder_{chamado_id}"
+                    )
 
                 if salvar or responder:
                     dados_update = {
@@ -1610,12 +1525,12 @@ elif menu == "Painel Geral":
 
                     supabase.table("chamados") \
                         .update(dados_update) \
-                        .eq("id", int(chamado["id"])) \
+                        .eq("id", chamado_id) \
                         .execute()
 
                     supabase.table("historico_chamados") \
                         .insert({
-                            "chamado_id": int(chamado["id"]),
+                            "chamado_id": chamado_id,
                             "acao": f"Status alterado para {novo_status}",
                             "usuario": responsavel or usuario["nome"],
                             "observacao": observacoes
@@ -1638,38 +1553,148 @@ elif menu == "Painel Geral":
                             st.code(detalhe)
 
                     enviar_google_chat(
-                        f"✅ *Chamado atualizado*\\n\\n"
-                        f"Protocolo: {chamado.get('protocolo', '')}\\n"
-                        f"Novo status: {novo_status}\\n"
-                        f"Responsável: {responsavel}\\n"
+                        f"✅ *Chamado atualizado*\n\n"
+                        f"Protocolo: {chamado.get('protocolo', '')}\n"
+                        f"Novo status: {novo_status}\n"
+                        f"Responsável: {responsavel}\n"
                         f"Observação: {observacoes}"
                     )
 
-                st.markdown('<div class="section-title">Histórico do Chamado</div>', unsafe_allow_html=True)
+        st.divider()
+        st.markdown('<div class="section-title">📊 Gráficos e indicadores</div>', unsafe_allow_html=True)
 
-                try:
-                    hist = supabase.table("historico_chamados") \
-                        .select("*") \
-                        .eq("chamado_id", int(chamado["id"])) \
-                        .order("criado_em", desc=True) \
-                        .limit(4) \
-                        .execute()
+        g1, g2, g3 = st.columns([1.05, 1.05, .95], gap="medium")
 
-                    for h in hist.data or []:
-                        st.markdown(
-                            f"""
-                            <div class="timeline-item">
-                                <b>{formatar_data(h.get('criado_em',''))}</b><br>
-                                {h.get('usuario','')} - {h.get('acao','')}<br>
-                                <small>{h.get('observacao','')}</small>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                except Exception:
-                    st.caption("Histórico indisponível.")
+        with g1:
+            st.markdown('<div class="section-title card-title-only">Chamados por Status</div>', unsafe_allow_html=True)
+            fig_status = px.pie(df, names="status", hole=0.58)
+            fig_status.update_layout(
+                height=310,
+                margin=dict(t=5, b=5, l=5, r=5),
+                legend=dict(orientation="v", y=.5)
+            )
+            st.plotly_chart(fig_status, use_container_width=True)
 
-            st.markdown('</div>', unsafe_allow_html=True)
+        with g2:
+            st.markdown('<div class="section-title card-title-only">Chamados por Prioridade</div>', unsafe_allow_html=True)
+            prioridade_df = (
+                df.groupby("prioridade")
+                .size()
+                .reset_index(name="quantidade")
+                .sort_values("quantidade", ascending=False)
+            )
+            fig_prioridade = px.bar(
+                prioridade_df,
+                x="prioridade",
+                y="quantidade",
+                text="quantidade"
+            )
+            fig_prioridade.update_layout(
+                height=310,
+                margin=dict(t=5, b=5, l=5, r=5),
+                showlegend=False
+            )
+            fig_prioridade.update_traces(textposition="outside")
+            st.plotly_chart(fig_prioridade, use_container_width=True)
+
+        with g3:
+            st.markdown('<div class="section-title card-title-only">Chamados por Setor</div>', unsafe_allow_html=True)
+            agrupado_df = (
+                df.groupby("setor")
+                .size()
+                .reset_index(name="quantidade")
+                .sort_values("quantidade", ascending=True)
+                .tail(8)
+            )
+            fig_agrupado = px.bar(
+                agrupado_df,
+                x="quantidade",
+                y="setor",
+                orientation="h",
+                text="quantidade"
+            )
+            fig_agrupado.update_layout(
+                height=310,
+                margin=dict(t=5, b=5, l=5, r=5),
+                showlegend=False
+            )
+            st.plotly_chart(fig_agrupado, use_container_width=True)
+
+        st.markdown('<div class="dark-tv-box">', unsafe_allow_html=True)
+        tv_top1, tv_top2 = st.columns([2, 1])
+
+        with tv_top1:
+            st.markdown('<div class="dark-tv-title">📺 TV OPERACIONAL - CHAMADOS AO VIVO <span class="live-badge">AO VIVO</span></div>', unsafe_allow_html=True)
+
+        with tv_top2:
+            st.markdown(
+                f'<div class="dark-tv-time">{datetime.now().strftime("%d/%m/%Y %H:%M")}</div>',
+                unsafe_allow_html=True
+            )
+
+        if "filtro_tv_painel" not in st.session_state:
+            st.session_state.filtro_tv_painel = "Todos"
+
+        tabs1, tabs2, tabs3, tabs4, tabs5 = st.columns(5)
+
+        with tabs1:
+            if st.button(f"Todos  {total}", use_container_width=True, key="btn_tv_todos"):
+                st.session_state.filtro_tv_painel = "Todos"
+
+        with tabs2:
+            if st.button(f"Abertos  {abertos}", use_container_width=True, key="btn_tv_abertos"):
+                st.session_state.filtro_tv_painel = "Abertos"
+
+        with tabs3:
+            if st.button(f"Em andamento  {andamento}", use_container_width=True, key="btn_tv_andamento"):
+                st.session_state.filtro_tv_painel = "Em andamento"
+
+        with tabs4:
+            if st.button(f"Atrasados  {atrasados}", use_container_width=True, key="btn_tv_atrasados"):
+                st.session_state.filtro_tv_painel = "Atrasados"
+
+        with tabs5:
+            if st.button(f"Urgentes  {urgentes}", use_container_width=True, key="btn_tv_urgentes"):
+                st.session_state.filtro_tv_painel = "Urgentes"
+
+        filtro_tv = st.session_state.filtro_tv_painel
+
+        if filtro_tv == "Abertos":
+            df_tv_painel = df[df["status"] == "Aberto"].copy()
+        elif filtro_tv == "Em andamento":
+            df_tv_painel = df[df["status"] == "Em andamento"].copy()
+        elif filtro_tv == "Atrasados":
+            df_tv_painel = df[df["sla"] == "Atrasado"].copy()
+        elif filtro_tv == "Urgentes":
+            df_tv_painel = df[df["prioridade"] == "Urgente"].copy()
+        else:
+            df_tv_painel = df.copy()
+
+        st.markdown(
+            f'<div class="filtro-ativo">Filtro ativo: <b>{filtro_tv}</b> • {len(df_tv_painel)} chamado(s)</div>',
+            unsafe_allow_html=True
+        )
+
+        colunas_recentes = [
+            "protocolo",
+            "unidade",
+            "setor",
+            "descricao",
+            "prioridade",
+            "status",
+            "sla",
+            "responsavel",
+            "criado_em"
+        ]
+        colunas_recentes = [c for c in colunas_recentes if c in df_tv_painel.columns]
+        recentes = df_tv_painel[colunas_recentes].head(12).copy()
+
+        if "criado_em" in recentes.columns:
+            recentes["criado_em"] = recentes["criado_em"].apply(formatar_data)
+
+        st.dataframe(recentes, use_container_width=True, hide_index=True)
+        st.caption("Atualização automática a cada 30 segundos")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =========================
