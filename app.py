@@ -1259,6 +1259,236 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+
+# Tipografia final do menu Insights, aproximada do protótipo aprovado.
+st.markdown("""
+<style>
+/* Nitidez geral dos componentes personalizados */
+.insight-proto-panel,
+.insight-proto-panel *,
+.insight-card,
+.insight-card *,
+.insight-summary,
+.insight-summary * {
+    font-family: "Segoe UI", Inter, Arial, sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Títulos e subtítulos dos painéis */
+.insight-proto-title {
+    color:#081b35 !important;
+    font-size:24px !important;
+    font-weight:900 !important;
+    line-height:1.18 !important;
+    letter-spacing:-.25px;
+}
+
+.insight-proto-subtitle {
+    color:#5f718a !important;
+    font-size:14px !important;
+    font-weight:500 !important;
+    line-height:1.45 !important;
+    margin-top:7px !important;
+}
+
+/* Risco de SLA */
+.insight-sla-table th {
+    color:#415779 !important;
+    font-size:11.5px !important;
+    font-weight:900 !important;
+    letter-spacing:.45px !important;
+}
+
+.insight-sla-table td {
+    color:#162a45 !important;
+    font-size:13.5px !important;
+    font-weight:500 !important;
+    line-height:1.4 !important;
+}
+
+.insight-sla-table td:first-child {
+    color:#0b2447 !important;
+    font-weight:900 !important;
+}
+
+.insight-status-pill {
+    font-size:11.5px !important;
+    font-weight:900 !important;
+    padding:5px 9px !important;
+}
+
+.insight-time-red,
+.insight-time-orange,
+.insight-time-yellow {
+    font-size:13.5px !important;
+    font-weight:900 !important;
+}
+
+/* Produtividade */
+.insight-productivity-table th {
+    color:#415779 !important;
+    font-size:11.5px !important;
+    font-weight:900 !important;
+    letter-spacing:.4px !important;
+}
+
+.insight-productivity-table td {
+    color:#162a45 !important;
+    font-size:13.5px !important;
+    font-weight:500 !important;
+    line-height:1.4 !important;
+}
+
+.insight-productivity-table td:first-child {
+    color:#081b35 !important;
+    font-weight:900 !important;
+}
+
+/* Análise por categoria */
+.insight-category-name {
+    color:#071a33 !important;
+    font-size:16px !important;
+    font-weight:900 !important;
+}
+
+.insight-category-count {
+    color:#071a33 !important;
+    font-size:16px !important;
+    font-weight:900 !important;
+}
+
+.insight-category-meta {
+    color:#61728a !important;
+    font-size:12.5px !important;
+    font-weight:500 !important;
+    line-height:1.45 !important;
+}
+
+/* Recomendações */
+.insight-action {
+    padding:15px 16px !important;
+}
+
+.insight-action-number {
+    width:38px !important;
+    height:38px !important;
+    flex-basis:38px !important;
+    font-size:14px !important;
+    font-weight:900 !important;
+}
+
+.insight-action-text {
+    color:#61728a !important;
+    font-size:13.5px !important;
+    font-weight:500 !important;
+    line-height:1.5 !important;
+}
+
+.insight-action-text strong {
+    color:#071a33 !important;
+    font-size:15.5px !important;
+    font-weight:900 !important;
+    line-height:1.35 !important;
+    margin-bottom:4px !important;
+}
+
+/* Bloco de prioridade */
+.insight-priority-title {
+    color:#6f270f !important;
+    font-size:20px !important;
+    font-weight:900 !important;
+}
+
+.insight-priority-main-large {
+    color:#c53d0a !important;
+    font-size:44px !important;
+    font-weight:900 !important;
+    line-height:1.05 !important;
+    letter-spacing:-.8px;
+}
+
+.insight-priority-description {
+    color:#7b2b11 !important;
+    font-size:14px !important;
+    font-weight:500 !important;
+    line-height:1.65 !important;
+}
+
+.insight-priority-button {
+    font-size:13.5px !important;
+    font-weight:900 !important;
+    padding:12px 17px !important;
+}
+
+/* Etiquetas */
+.insight-tag {
+    font-size:11.5px !important;
+    font-weight:900 !important;
+    padding:7px 11px !important;
+}
+
+/* Cards superiores para manter o mesmo padrão tipográfico */
+.insight-card-label {
+    color:#536781 !important;
+    font-size:13.5px !important;
+    font-weight:800 !important;
+}
+
+.insight-card-main {
+    color:#071a33 !important;
+    font-size:25px !important;
+    font-weight:900 !important;
+    line-height:1.15 !important;
+}
+
+.insight-card-foot {
+    color:#61728a !important;
+    font-size:12.5px !important;
+    font-weight:500 !important;
+    line-height:1.5 !important;
+}
+
+/* Ranking e recorrências */
+.insight-rank-name,
+.insight-problem-name {
+    color:#071a33 !important;
+    font-size:15.5px !important;
+    font-weight:900 !important;
+}
+
+.insight-rank-meta,
+.insight-problem-meta {
+    color:#61728a !important;
+    font-size:12px !important;
+    font-weight:500 !important;
+}
+
+.insight-rank-score strong,
+.insight-problem-count {
+    color:#071a33 !important;
+    font-weight:900 !important;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+    .insight-proto-title {
+        font-size:21px !important;
+    }
+
+    .insight-priority-main-large {
+        font-size:38px !important;
+    }
+
+    .insight-sla-table td,
+    .insight-productivity-table td {
+        font-size:13px !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # =========================
 # FUNÇÕES BASE
 # =========================
