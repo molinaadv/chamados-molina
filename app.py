@@ -1132,6 +1132,133 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+
+# Ajuste final do Risco de SLA e Produtividade para o padrão do protótipo.
+st.markdown("""
+<style>
+.insight-tag-yellow {
+    background:#fef9c3;
+    color:#854d0e;
+}
+
+.insight-sla-panel {
+    padding:24px 26px;
+}
+
+.insight-sla-wrap {
+    width:100%;
+    overflow-x:auto;
+}
+
+.insight-sla-table {
+    width:100%;
+    min-width:900px;
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+.insight-sla-table th,
+.insight-sla-table td {
+    padding:13px 11px;
+    text-align:left;
+    border-top:0 !important;
+    border-left:0 !important;
+    border-right:0 !important;
+    border-bottom:1px solid #e2e8f0 !important;
+    background:transparent !important;
+    color:#334155;
+    font-size:12px;
+}
+
+.insight-sla-table th {
+    color:#607086;
+    text-transform:uppercase;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.35px;
+}
+
+.insight-sla-table tbody tr:last-child td {
+    border-bottom:0 !important;
+}
+
+.insight-sla-table tbody tr:hover td {
+    background:#f8fbff !important;
+}
+
+.insight-bottom-panel {
+    min-height:500px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
+
+.insight-bottom-panel .insight-proto-head {
+    flex:0 0 auto;
+}
+
+.insight-bottom-panel .insight-category-list,
+.insight-bottom-panel .insight-productivity-wrap {
+    flex:1 1 auto;
+}
+
+.insight-productivity-wrap {
+    width:100%;
+    overflow-x:auto;
+}
+
+.insight-productivity-table {
+    width:100%;
+    min-width:600px;
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+.insight-productivity-table th,
+.insight-productivity-table td {
+    padding:13px 10px;
+    text-align:left;
+    border-top:0 !important;
+    border-left:0 !important;
+    border-right:0 !important;
+    border-bottom:1px solid #e2e8f0 !important;
+    background:transparent !important;
+    color:#334155;
+    font-size:12px;
+}
+
+.insight-productivity-table th {
+    color:#607086;
+    text-transform:uppercase;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.3px;
+}
+
+.insight-productivity-table tbody tr:last-child td {
+    border-bottom:0 !important;
+}
+
+.insight-productivity-table tbody tr:hover td {
+    background:#f8fbff !important;
+}
+
+.insight-bottom-panel .insight-category-row {
+    min-height:91px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+@media (max-width: 1100px) {
+    .insight-bottom-panel {
+        min-height:0;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # =========================
 # FUNÇÕES BASE
 # =========================
@@ -2714,8 +2841,8 @@ elif menu == "Insights":
 
             sla_conteudo = (
                 f"""
-                <div class="insight-table-wrap">
-                    <table class="insight-table">
+                <div class="insight-sla-wrap">
+                    <table class="insight-sla-table">
                         <thead>
                             <tr>
                                 <th>Protocolo</th>
@@ -2737,7 +2864,7 @@ elif menu == "Insights":
 
             renderizar_html_bloco(
                 f"""
-                <div class="insight-proto-panel">
+                <div class="insight-proto-panel insight-sla-panel">
                     <div class="insight-proto-head">
                         <div>
                             <div class="insight-proto-title">Risco de SLA</div>
@@ -2748,6 +2875,7 @@ elif menu == "Insights":
                         <div>
                             <span class="insight-tag insight-tag-red">Menos de 1h</span>
                             <span class="insight-tag insight-tag-orange">1h a 4h</span>
+                            <span class="insight-tag insight-tag-yellow">Vence hoje</span>
                         </div>
                     </div>
                     {sla_conteudo}
@@ -2840,7 +2968,7 @@ elif menu == "Insights":
                     ascending=[False, False]
                 )
 
-                for _, linha in produtividade.head(10).iterrows():
+                for _, linha in produtividade.head(6).iterrows():
                     tempo_medio = linha.get("tempo_medio_horas")
                     percentual_individual = linha.get("percentual_sla")
 
